@@ -77,6 +77,10 @@ file 'Chrome/LiveReload/global.js' => ['src/global.coffee'] do |task|
     browserify task.name, task.prerequisites.first
 end
 
+file 'Chrome/LiveReload/popup.js' => ['src/popup.coffee'] do |task|
+    browserify task.name, task.prerequisites.first
+end
+
 file 'Chrome/LiveReload/global-chrome.js' => ['src/global-chrome.coffee'] do |task|
     coffee task.name, task.prerequisites.first
 end
@@ -175,6 +179,8 @@ task :build => [
     'Chrome/LiveReload/devtools.js',
     'Chrome/LiveReload/devtools-chrome.js',
     'Chrome/LiveReload/injected.js',
+    'Chrome/LiveReload/injected.js',
+    'Chrome/LiveReload/popup.js',
     'Firefox/content/global.js',
     'Firefox/content/injected.js',
     'Firefox/content/firefox.js',

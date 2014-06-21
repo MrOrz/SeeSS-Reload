@@ -17,6 +17,7 @@ Status =
     buttonIcon: 'IconEnabled.png'
   active:
     buttonEnabled: yes
+    activated: yes # For global chrome to show popup
     buttonToolTip: 'LiveReload is connected, click to disable'
     buttonIcon: 'IconActive.png'
 

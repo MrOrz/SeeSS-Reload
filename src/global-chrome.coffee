@@ -18,8 +18,18 @@ ToggleCommand =
 
 
 chrome.browserAction.onClicked.addListener (tab) ->
-  LiveReloadGlobal.toggle(tab.id)
-  ToggleCommand.update(tab.id)
+  status = LiveReloadGlobal.tabStatus(tab.id)
+  console.log "Listener Clickd", status
+  if status.activated
+    console.log 'Show Popup!'
+  else
+    LiveReloadGlobal.toggle(tab.id)
+    ToggleCommand.update(tab.id)
+
+    chrome.browserAction.setPopup
+      tabId: tab.id
+      popup: 'popup.html'
+
 
 chrome.tabs.onSelectionChanged.addListener (tabId, selectInfo) ->
   ToggleCommand.update(tabId)
