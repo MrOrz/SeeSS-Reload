@@ -1,4 +1,3 @@
-
 TabState::send = (message, data={}) ->
   chrome.tabs.sendMessage @tab, [message, data]
 
@@ -8,7 +7,6 @@ LiveReloadGlobal.isAvailable = (tab) -> yes
 
 LiveReloadGlobal.initialize()
 
-
 ToggleCommand =
   invoke: ->
   update: (tabId) ->
@@ -16,19 +14,26 @@ ToggleCommand =
     chrome.browserAction.setTitle { tabId, title: status.buttonToolTip }
     chrome.browserAction.setIcon { tabId, path: status.buttonIcon }
 
+Popup =
+  set: (tabId) ->
+    chrome.browserAction.setPopup
+      tabId: tabId
+      popup: 'popup.html'
+
+  unset: (tabId) ->
+    chrome.browserAction.setPopup
+      tabId: tabId
+      popup: ''
 
 chrome.browserAction.onClicked.addListener (tab) ->
   status = LiveReloadGlobal.tabStatus(tab.id)
   console.log "Listener Clickd", status
-  if status.activated
-    console.log 'Show Popup!'
-  else
+  if !status.activated
     LiveReloadGlobal.toggle(tab.id)
     ToggleCommand.update(tab.id)
 
-    chrome.browserAction.setPopup
-      tabId: tab.id
-      popup: 'popup.html'
+    # Setup popup for future activation of the button.
+    Popup.set(tab.id)
 
 
 chrome.tabs.onSelectionChanged.addListener (tabId, selectInfo) ->
@@ -44,5 +49,14 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
     when 'status'
       LiveReloadGlobal.updateStatus(sender.tab.id, data)
       ToggleCommand.update(sender.tab.id)
+    when 'disableFromPopup'
+
+      tab = data
+      LiveReloadGlobal.toggle(tab.id)
+      ToggleCommand.update(tab.id)
+
+      # Unset popup
+      Popup.unset(tab.id)
+
     else
       LiveReloadGlobal.received(eventName, data)

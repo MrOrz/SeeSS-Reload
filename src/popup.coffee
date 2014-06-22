@@ -1,15 +1,7 @@
-# ToggleCommand =
-#   invoke: ->
-#   update: (tabId) ->
-#     status = LiveReloadGlobal.tabStatus(tabId)
-#     chrome.browserAction.setTitle { tabId, title: status.buttonToolTip }
-#     chrome.browserAction.setIcon { tabId, path: status.buttonIcon }
-
-
 document.querySelector('.disable-livereload').addEventListener 'click', () ->
-  # LiveReloadGlobal.toggle(tab.id)
-  # ToggleCommand.update(tab.id)
-
-  chrome.extension.sendMessage ['status', enabled: no, active: no]
-  chrome.browserAction.setPopup # Disable the popup
-    popup: ""
+  # Disable live reload of current window.
+  chrome.tabs.query {active: true, currentWindow: true}, (tabs) ->
+    # console.log(tabs)
+    if tabs.length == 1
+      chrome.extension.sendMessage ['disableFromPopup', tabs[0]]
+      window.close()

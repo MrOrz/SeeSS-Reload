@@ -13,12 +13,12 @@ Status =
     buttonIcon: 'IconDisabled.png'
   enabled:
     buttonEnabled: yes
-    buttonToolTip: 'LiveReload is connecting, click to disable'
+    buttonToolTip: 'LiveReload is connecting, click to open SeeSS reporting form'
     buttonIcon: 'IconEnabled.png'
   active:
     buttonEnabled: yes
     activated: yes # For global chrome to show popup
-    buttonToolTip: 'LiveReload is connected, click to disable'
+    buttonToolTip: 'LiveReload is connected, click to open SeeSS reporting form'
     buttonIcon: 'IconActive.png'
 
 
