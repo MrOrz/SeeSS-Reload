@@ -1,6 +1,6 @@
 window.DomSerializer =
-  stringify: (root) ->
-    
+  toObject: (root) ->
 
 
-  parse: (str) ->
+
+  toDom: (str) ->
