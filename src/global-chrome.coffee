@@ -48,6 +48,60 @@ Popup =
       tabId: ToggleCommand.currentTabId
       text: ''
 
+Inspector =
+  doStart: () ->
+    chrome.debugger.sendCommand @debuggee, 'DOM.setInspectModeEnabled',
+      enabled: true
+      highlightConfig:
+        showInfo: true
+        contentColor: {r: 0, g: 0, b: 255, a:0.5}
+        borderColor:  {r: 0, g: 0, b: 255, a:0.8}
+
+
+    # Mark the inspected element with empty attribute __SEESS_GLITCH__
+    #
+    # https://github.com/cyrus-and/chrome-remote-interface/blob/master/lib/protocol.json
+    # Much better than Chrome's documentation...
+    #
+    chrome.debugger.onEvent.addListener (src, method, params) =>
+      return unless method == 'DOM.inspectNodeRequested'
+      tabId = src.tabId
+      nodeId = params.nodeId
+      chrome.debugger.sendCommand @debuggee, 'DOM.setAttributeValue', {
+        nodeId: nodeId,
+        name: '__SEESS_GLITCH__',
+        value: '',
+      }, () =>
+        @stop()
+
+      # chrome.debugger.sendCommand @debuggee, 'DOM.resolveNode', {nodeId: nodeId}, (result) ->
+      #   @selectedElem = result[0]
+
+  start: (cb) ->
+
+    @selectedElem = null
+
+    @debuggee =
+      tabId: ToggleCommand.currentTabId
+
+    chrome.debugger.attach @debuggee, "1.0", () =>
+
+      # Check if the debugger is successfully attached or not.
+      # Only initiate inspector mode on when the debugger is attached.
+      #
+      chrome.debugger.getTargets (targets) =>
+        targets = targets.filter (t) => t.tabId == @debuggee.tabId
+
+        if targets.length == 1 and targets[0].attached
+          @doStart()
+          cb(true) # debugger launched successfully
+        else
+          cb(false) # DevTools opened, debugger cannot launch
+
+  stop: () ->
+    chrome.debugger.sendCommand @debuggee, 'DOM.setInspectModeEnabled', {enabled: false}, () =>
+      chrome.debugger.detach @debuggee
+      @debuggee = null
 
 chrome.browserAction.onClicked.addListener (tab) ->
   status = LiveReloadGlobal.tabStatus(tab.id)
@@ -58,6 +112,11 @@ chrome.browserAction.onClicked.addListener (tab) ->
 
     # Setup popup for future activation of the button.
     Popup.set()
+
+    # Debugger
+    # chrome.debugger.attach {tabId: tab.id}, "1.0"
+    # chrome.debugger.onEvent.addListener (debuggee, method, params) ->
+    #   console.log 'debugger onEvent', arguments
 
 # http://stackoverflow.com/questions/14069948/how-to-stop-chrome-tabs-reload-from-resetting-the-extension-icon
 # Chrome refresh / pushstate resets icon to default. Get it back.
@@ -82,14 +141,22 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
     when 'status'
       LiveReloadGlobal.updateStatus(sender.tab.id, data)
       ToggleCommand.update(sender.tab.id)
-    when 'disableFromPopup'
 
+    when 'disableFromPopup'
       tab = data
       LiveReloadGlobal.toggle(tab.id)
       ToggleCommand.update(tab.id)
 
       # Unset popup
       Popup.unset()
+
+    # Starts inspection and returns whether starting is successful.
+    #
+    when 'startInspection'
+      Inspector.start (success)->
+        sendResponse success
+
+      return true
 
     else
       LiveReloadGlobal.received(eventName, data)

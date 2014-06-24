@@ -1,3 +1,5 @@
+$glitch = document.getElementById('glitch')
+
 getCurrentTab = (cb) ->
   chrome.tabs.query {active: true, currentWindow: true}, (tabs) ->
     cb tabs[0]
@@ -20,3 +22,19 @@ document.getElementById('save').addEventListener 'click', () ->
       a.innerText = "Download!"
 
       document.querySelector('body').insertBefore a
+
+$glitch.addEventListener 'click', () ->
+  getCurrentTab (tab) ->
+    chrome.extension.sendMessage ['startInspection'], (success) ->
+      if success
+        window.close()
+      else
+        $glitch.value = "Please close devtools or add attribute '__SEESS_GLITCH__' on your own."
+
+# Kick start:
+# Read the previously selected glitches from content script
+#
+getCurrentTab (tab) ->
+  chrome.tabs.sendMessage tab.id, ['getGlitches'], (glitchNames) ->
+    # console.log 'Get element: ', elements
+    $glitch.value = glitchNames.join(', ')
