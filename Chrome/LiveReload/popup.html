@@ -1,7 +1,50 @@
-<h1>Hello world</h1>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SeeSS LiveReload Popup</title>
+  <link rel="stylesheet" href="todc-bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="todc-bootstrap/css/todc-bootstrap.min.css">
+  <style>
+    body {
+      width: 320px;
+      margin: 1em 0;
+    }
 
-<button class="disable-livereload">Disable Livereload</button>
+    #glitch {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- <button class="save">Save as MHTML</button> -->
+  <div class="container">
+    <form action="">
+      <div class="form-group">
+        <label for="glitch" class="control-label">Element with glitch</label>
 
-<button class="save">Save as MHTML</button>
+        <div class="input-group">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button">
+              <span class="glyphicon glyphicon-search"></span>
+            </button>
+          </span>
+          <input id="glitch" class="form-control" placeholder="Click to inspect element..." readonly>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="control-label" for="glitch">Describe the glitch</label>
+        <textarea class="form-control" id="glitch"></textarea>
+      </div>
 
-<script src="popup.js"></script>
+      <button class="btn btn-primary btn-block" type="submit">Store glitch to Google Drive</button>
+    </form>
+    <hr>
+
+    <p class="text-center">
+      <button class="disable-livereload btn btn-default btn-sm">Disable LiveReload</button>
+    </p>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
