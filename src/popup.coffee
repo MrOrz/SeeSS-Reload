@@ -1,12 +1,14 @@
-document.querySelector('.disable-livereload').addEventListener 'click', () ->
-  # Disable live reload of current window.
+getCurrentTab = (cb) ->
   chrome.tabs.query {active: true, currentWindow: true}, (tabs) ->
-    # console.log(tabs)
-    if tabs.length == 1
-      chrome.extension.sendMessage ['disableFromPopup', tabs[0]]
-      window.close()
+    cb tabs[0]
 
-document.querySelector('.save').addEventListener 'click', () ->
+document.getElementById('disable').addEventListener 'click', () ->
+  # Disable live reload of current window.
+  getCurrentTab (tab) ->
+    chrome.extension.sendMessage ['disableFromPopup', tab]
+    window.close()
+
+document.getElementById('save').addEventListener 'click', () ->
   chrome.tabs.query {active: true, currentWindow: true}, (tabs) ->
     chrome.pageCapture.saveAsMHTML {
       tabId: tabs[0].id
