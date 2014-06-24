@@ -8,22 +8,46 @@ LiveReloadGlobal.isAvailable = (tab) -> yes
 LiveReloadGlobal.initialize()
 
 ToggleCommand =
+  currentTabId: null
   invoke: ->
   update: (tabId) ->
+    @currentTabId = tabId
+    console.log 'Update to tab id: ', tabId
     status = LiveReloadGlobal.tabStatus(tabId)
     chrome.browserAction.setTitle { tabId, title: status.buttonToolTip }
     chrome.browserAction.setIcon { tabId, path: status.buttonIcon }
 
 Popup =
-  set: (tabId) ->
+  set: () ->
+    console.log 'Set popup'
     chrome.browserAction.setPopup
-      tabId: tabId
+      tabId: ToggleCommand.currentTabId
       popup: 'popup.html'
 
-  unset: (tabId) ->
+    # chrome.browserAction.setBadgeText
+      # tabId: ToggleCommand.currentTabId
+      # text: 'X'
+      # text: '…'
+      # text: '✓'
+
+    # chrome.browserAction.setBadgeBackgroundColor
+      # tabId: ToggleCommand.currentTabId
+      # color: '#c00'
+      # color: '#cc0'
+      # color: '#090'
+
+
+  unset: () ->
+    console.log 'Unset popup'
+
     chrome.browserAction.setPopup
-      tabId: tabId
+      tabId: ToggleCommand.currentTabId
       popup: ''
+
+    chrome.browserAction.setBadgeText
+      tabId: ToggleCommand.currentTabId
+      text: ''
+
 
 chrome.browserAction.onClicked.addListener (tab) ->
   status = LiveReloadGlobal.tabStatus(tab.id)
@@ -33,8 +57,17 @@ chrome.browserAction.onClicked.addListener (tab) ->
     ToggleCommand.update(tab.id)
 
     # Setup popup for future activation of the button.
-    Popup.set(tab.id)
+    Popup.set()
 
+# http://stackoverflow.com/questions/14069948/how-to-stop-chrome-tabs-reload-from-resetting-the-extension-icon
+# Chrome refresh / pushstate resets icon to default. Get it back.
+#
+chrome.tabs.onUpdated.addListener (tabId) ->
+  status = LiveReloadGlobal.tabStatus(tabId)
+  ToggleCommand.update(tabId) if tabId == ToggleCommand.currentTabId
+
+  # If the status is activated but resetted by refresh, setup the popup.
+  Popup.set() if status.activated
 
 chrome.tabs.onSelectionChanged.addListener (tabId, selectInfo) ->
   ToggleCommand.update(tabId)
@@ -56,7 +89,7 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
       ToggleCommand.update(tab.id)
 
       # Unset popup
-      Popup.unset(tab.id)
+      Popup.unset()
 
     else
       LiveReloadGlobal.received(eventName, data)
