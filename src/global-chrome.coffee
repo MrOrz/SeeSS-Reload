@@ -111,6 +111,9 @@ window.Drive =
   FOLDER_MIME: 'application/vnd.google-apps.folder'
   REDIRECT_URI: 'http://mrorz.github.io/SeeSS-Reload'
 
+  initialize: (cb) ->
+    gapi.client.load 'drive', 'v2', cb
+
   authorize: () ->
 
     parseToken = (tabId, info, tab) =>
@@ -148,10 +151,9 @@ window.Drive =
 
   # Get the drive folder named FOLDER_NAME in the user's google drive.
   findFolder: (cb) ->
-    gapi.client.drive.files.list {
+    request = gapi.client.drive.files.list
       q: "title='#{@FOLDER_NAME}' and mimeType = '#{@FOLDER_MIME}'"
       fields: "items/id"
-    }, (resp) =>
     request.execute (resp) =>
       console.log 'findFolder resp: ', resp
       @folderId = resp.items?.length && resp.items[0].id
