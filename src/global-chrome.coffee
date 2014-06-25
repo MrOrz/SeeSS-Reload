@@ -118,7 +118,7 @@ window.Drive =
       #
       return unless info.url and info.url.indexOf(@REDIRECT_URI) == 0
       tokenObj = {}
-      queryString = info.url.slice info.url.indexOf('#')
+      queryString = info.url.slice( info.url.indexOf('#')+1 )
       regex = /([^&=]+)=([^&]*)/g
 
       while m = regex.exec queryString
@@ -128,7 +128,9 @@ window.Drive =
       # https://developers.google.com/api-client-library/javascript/reference/referencedocs
       #
       gapi.auth.setToken tokenObj
+
       console.log "Logged in Google Drive", tokenObj
+
 
       chrome.tabs.onUpdated.removeListener parseToken
 
