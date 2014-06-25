@@ -103,6 +103,100 @@ Inspector =
       chrome.debugger.detach @debuggee
       @debuggee = null
 
+
+window.Drive =
+  CLIENT_ID: '302964203115-7octpaksp7lqbo5u7jhlhb9qvlmjinq4.apps.googleusercontent.com'
+  SCOPES: 'https://www.googleapis.com/auth/drive'
+  FOLDER_NAME: 'SeeSS Collected Data'
+  FOLDER_MIME: 'application/vnd.google-apps.folder'
+  REDIRECT_URI: 'http://mrorz.github.io/SeeSS-Reload'
+
+  authorize: () ->
+
+    parseToken = (tabId, info, tab) =>
+      # https://developers.google.com/accounts/docs/OAuth2UserAgent
+      #
+      return unless info.url and info.url.indexOf(@REDIRECT_URI) == 0
+      tokenObj = {}
+      queryString = info.url.slice info.url.indexOf('#')
+      regex = /([^&=]+)=([^&]*)/g
+
+      while m = regex.exec queryString
+        tokenObj[decodeURIComponent(m[1])] = decodeURIComponent(m[2])
+
+      # Call setToken when tokenObj exists
+      # https://developers.google.com/api-client-library/javascript/reference/referencedocs
+      #
+      gapi.auth.setToken tokenObj
+      console.log "Logged in Google Drive", tokenObj
+
+      chrome.tabs.onUpdated.removeListener parseToken
+
+    chrome.tabs.onUpdated.addListener parseToken
+
+    gapi.auth.authorize
+      client_id: @CLIENT_ID
+      scope: @SCOPES
+      immediate: false
+      # https://developers.google.com/api-client-library/javascript/start/start-js
+      # Setting redirect-uri means using the server-side flow.
+      # However we use the extension to capture the access token in URL here.
+      #
+      redirect_uri: @REDIRECT_URI
+
+  # Get the drive folder named FOLDER_NAME in the user's google drive.
+  findFolder: (cb) ->
+    gapi.client.drive.files.list {
+      q: "title='#{@FOLDER_NAME}' and mimeType = '#{@FOLDER_MIME}'"
+      fields: "items/id"
+    }, (resp) =>
+      console.log 'findFolder resp: ', resp
+      @folderId = resp.items.length && resp.items[0].id
+      cb(@folderId)
+
+  createFolder: (cb) ->
+    gapi.client.request {
+      path: '/upload/drive/v2/files'
+      method: 'POST'
+      params:
+        uploadType: 'media'
+      body:
+        title: @FOLDER_NAME
+        mimeType: @FOLDER_MIME
+    }, (resp) =>
+      console.log 'createFolder resp:', resp
+      @folderId = resp.id
+      cb(@folderId)
+
+  # Upload the file into FOLDER_NAME folder
+  # https://developers.google.com/drive/v2/reference/files/insert
+  upload: (fileName, mhtml, cb) ->
+    BOUNDRY = "---------#{Math.random()}"
+    DELIMITER = "\r\n--#{BOUNDRY}\r\n"
+    CLOSE_DELIMITER = "\r\n--#{BOUNDRY}"
+
+    metadata =
+      title: fileName
+      mimeType: 'application/octet-stream'
+
+    request = gapi.client.drive.files.insert
+      path: '/upload/drive/v2/files'
+      method: 'POST'
+      params:
+        uploadType: 'multipart'
+      headers:
+        'Content-Type': "multipart/mixed; boundary=\"#{BOUNDRY}\""
+      body: [
+        DELIMITER
+        'Content-Type: application/json\r\n\r\n'
+        JSON.stringify metadata
+        DELIMITER
+        'Content-Type: multipart/related\r\n\r\n'
+        mhtml
+      ].join()
+
+    request.execute cb
+
 chrome.browserAction.onClicked.addListener (tab) ->
   status = LiveReloadGlobal.tabStatus(tab.id)
   console.log "Listener Clickd", status

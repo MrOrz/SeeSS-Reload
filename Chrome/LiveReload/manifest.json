@@ -4,6 +4,7 @@
   "version": "2.0.9",
   "background": {
     "scripts": [
+      "google-api.js",
       "global.js",
       "global-chrome.js"
     ]
@@ -29,5 +30,8 @@
     "default_title": "Enable LiveReload",
     "default_icon": "IconDisabled.png"
   },
-  "update_url": "http://download.livereload.com/LiveReload-Chrome-update.xml"
+  "update_url": "http://download.livereload.com/LiveReload-Chrome-update.xml",
+
+  /* http://stackoverflow.com/questions/18681803/loading-google-api-javascript-client-library-into-chrome-extension */
+  "content_security_policy": "script-src 'self' 'unsafe-eval' https://apis.google.com; object-src 'self'"
 }
