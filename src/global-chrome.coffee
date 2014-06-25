@@ -152,8 +152,9 @@ window.Drive =
       q: "title='#{@FOLDER_NAME}' and mimeType = '#{@FOLDER_MIME}'"
       fields: "items/id"
     }, (resp) =>
+    request.execute (resp) =>
       console.log 'findFolder resp: ', resp
-      @folderId = resp.items.length && resp.items[0].id
+      @folderId = resp.items?.length && resp.items[0].id
       cb(@folderId)
 
   createFolder: (cb) ->
