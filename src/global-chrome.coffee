@@ -176,15 +176,11 @@ window.Drive =
   # Upload the file into FOLDER_NAME folder
   # https://developers.google.com/drive/v2/reference/files/insert
   upload: (fileName, mhtml, cb) ->
-    BOUNDRY = "---------#{Math.random()}"
+    BOUNDRY = "---------#{("" + Math.random()).slice(2)}"
     DELIMITER = "\r\n--#{BOUNDRY}\r\n"
-    CLOSE_DELIMITER = "\r\n--#{BOUNDRY}"
+    CLOSE_DELIMITER = "\r\n--#{BOUNDRY}--"
 
-    metadata =
-      title: fileName
-      mimeType: 'application/octet-stream'
-
-    request = gapi.client.drive.files.insert
+    request = gapi.client.request
       path: '/upload/drive/v2/files'
       method: 'POST'
       params:
@@ -194,11 +190,15 @@ window.Drive =
       body: [
         DELIMITER
         'Content-Type: application/json\r\n\r\n'
-        JSON.stringify metadata
+        JSON.stringify
+          title: fileName
+          mimeType: 'text/plain'
         DELIMITER
-        'Content-Type: multipart/related\r\n\r\n'
+        'Content-Type: text/plain\r\n'
+        'Content-Transfer-Encoding: 8bit\r\n\r\n'
         mhtml
-      ].join()
+        CLOSE_DELIMITER
+      ].join('')
 
     request.execute cb
 
