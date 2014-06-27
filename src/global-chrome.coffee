@@ -175,7 +175,7 @@ window.Drive =
 
   # Upload the file into FOLDER_NAME folder
   # https://developers.google.com/drive/v2/reference/files/insert
-  upload: (fileName, mhtml, cb) ->
+  upload: (fileName, mhtml, desc, cb) ->
     BOUNDRY = "---------#{("" + Math.random()).slice(2)}"
     DELIMITER = "\r\n--#{BOUNDRY}\r\n"
     CLOSE_DELIMITER = "\r\n--#{BOUNDRY}--"
@@ -193,6 +193,7 @@ window.Drive =
         JSON.stringify
           title: fileName
           mimeType: 'text/plain'
+          description: desc
         DELIMITER
         'Content-Type: text/plain\r\n'
         'Content-Transfer-Encoding: 8bit\r\n\r\n'
