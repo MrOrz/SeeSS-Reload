@@ -393,6 +393,16 @@ chrome.tabs.onUpdated.addListener (tabId, info, tab) ->
   # If the status is activated but resetted by refresh, setup the popup.
   Popup.set() if status.activated
 
+# Sends previously stored snapshots on refresh / pushstate
+chrome.tabs.onUpdated.addListener (tabId, info, tab) ->
+  return unless info.status == "loading"
+
+  # Only interested in updates of current tab
+  return unless tabId == ToggleCommand.currentTabId
+
+  # Send the stored blob file now.
+  sendSnapshot() if IntegrityState.readyToUpload()
+
 chrome.tabs.onSelectionChanged.addListener (tabId, selectInfo) ->
   ToggleCommand.update(tabId)
 
@@ -425,6 +435,7 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
           sendResponse false
       )
 
+      return true # Make the extension channel open for sendResponse() calls.
     when 'reportGlitch'
       chrome.pageCapture.saveAsMHTML {
         tabId: data.tab.id
