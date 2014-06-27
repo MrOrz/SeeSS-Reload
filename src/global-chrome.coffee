@@ -325,9 +325,8 @@ IntegrityState = do () ->
 
     # The only way to return to CORRECT_STATE
     cleanup: () ->
-      _storedTitle = title
-      _storedBlob = blb
-      _storedDesc = null
+      console.log "Stored blob information cleared"
+      _storedTitle = _storedBlob = _storedDesc = null
       _changeState(self.CORRECT_STATE)
 
     # Set state to any state other than CORRECT
@@ -356,7 +355,7 @@ sendSnapshot = () ->
   dateString = (new Date(localeTimestamp)).toISOString().replace('T',' ').replace(/\.\d{3}Z/, '')
 
   # Prefix every file with [v] or [x]
-  label = (IntegrityState.get() == IntegrityState.CORRECT_STATE ? 'v' : 'x')
+  label = if IntegrityState.get() == IntegrityState.CORRECT_STATE then 'v' else 'x'
 
   # Return Drive.upload promise
   #
