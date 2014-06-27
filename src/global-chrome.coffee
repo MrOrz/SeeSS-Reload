@@ -260,8 +260,8 @@ window.Drive = do () ->
   upload: (fileName, mhtmlBlob, desc) ->
     deferred = Q.defer()
 
-    if fileReader.readyState == fileReader.LOADING
-      console.error 'fileReader is busy now.'
+    if fileReader.readyState == fileReader.LOADING || uploadParams != null
+      throw new Error('Upload pending.')
 
     # Setup upload parameters
     uploadParams =
