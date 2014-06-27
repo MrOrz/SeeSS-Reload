@@ -16,7 +16,7 @@ document.getElementById('save').addEventListener 'click', () ->
     data =
       tab: tab
       glitch: $glitch.value
-      desc: $desc.innerText
+      desc: $desc.value
 
     chrome.extension.sendMessage ['reportGlitch', data], (success) ->
       window.close() if success
