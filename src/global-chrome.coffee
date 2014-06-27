@@ -1,3 +1,5 @@
+Q.longStackSupport = true
+
 TabState::send = (message, data={}) ->
   chrome.tabs.sendMessage @tab, [message, data]
 
@@ -104,78 +106,25 @@ Inspector =
       @debuggee = null
 
 
-window.Drive =
-  CLIENT_ID: '302964203115-7octpaksp7lqbo5u7jhlhb9qvlmjinq4.apps.googleusercontent.com'
-  SCOPES: 'https://www.googleapis.com/auth/drive'
-  FOLDER_NAME: 'SeeSS Collected Data'
-  FOLDER_MIME: 'application/vnd.google-apps.folder'
-  REDIRECT_URI: 'http://mrorz.github.io/SeeSS-Reload'
+window.Drive = do () ->
 
-  initialize: (cb) ->
-    gapi.client.load 'drive', 'v2', cb
+  # Private variables
+  #
+  CLIENT_ID = '302964203115-7octpaksp7lqbo5u7jhlhb9qvlmjinq4.apps.googleusercontent.com'
+  SCOPES = 'https://www.googleapis.com/auth/drive'
+  FOLDER_NAME = 'SeeSS Collected Data'
+  FOLDER_MIME = 'application/vnd.google-apps.folder'
+  REDIRECT_URI = 'http://mrorz.github.io/SeeSS-Reload'
 
-  authorize: () ->
-
-    parseToken = (tabId, info, tab) =>
-      # https://developers.google.com/accounts/docs/OAuth2UserAgent
-      #
-      return unless info.url and info.url.indexOf(@REDIRECT_URI) == 0
-      tokenObj = {}
-      queryString = info.url.slice( info.url.indexOf('#')+1 )
-      regex = /([^&=]+)=([^&]*)/g
-
-      while m = regex.exec queryString
-        tokenObj[decodeURIComponent(m[1])] = decodeURIComponent(m[2])
-
-      # Call setToken when tokenObj exists
-      # https://developers.google.com/api-client-library/javascript/reference/referencedocs
-      #
-      gapi.auth.setToken tokenObj
-
-      console.log "Logged in Google Drive", tokenObj
-
-
-      chrome.tabs.onUpdated.removeListener parseToken
-
-    chrome.tabs.onUpdated.addListener parseToken
-
-    gapi.auth.authorize
-      client_id: @CLIENT_ID
-      scope: @SCOPES
-      immediate: false
-      # https://developers.google.com/api-client-library/javascript/start/start-js
-      # Setting redirect-uri means using the server-side flow.
-      # However we use the extension to capture the access token in URL here.
-      #
-      redirect_uri: @REDIRECT_URI
-
-  # Get the drive folder named FOLDER_NAME in the user's google drive.
-  findFolder: (cb) ->
-    request = gapi.client.drive.files.list
-      q: "title='#{@FOLDER_NAME}' and mimeType = '#{@FOLDER_MIME}'"
-      fields: "items/id"
-    request.execute (resp) =>
-      console.log 'findFolder resp: ', resp
-      @folderId = resp.items?.length && resp.items[0].id
-      cb(@folderId)
-
-  createFolder: (cb) ->
-    gapi.client.request {
-      path: '/upload/drive/v2/files'
-      method: 'POST'
-      params:
-        uploadType: 'media'
-      body:
-        title: @FOLDER_NAME
-        mimeType: @FOLDER_MIME
-    }, (resp) =>
-      console.log 'createFolder resp:', resp
-      @folderId = resp.id
-      cb(@folderId)
+  fileReader = new FileReader
+  uploadParams = null
+  folderId = null # ID of the Google drive folder containing SeeSS mht files.
 
   # Upload the file into FOLDER_NAME folder
   # https://developers.google.com/drive/v2/reference/files/insert
-  upload: (fileName, mhtml, desc, cb) ->
+  fileReader.onload = () ->
+    return unless uploadParams
+
     BOUNDRY = "---------#{("" + Math.random()).slice(2)}"
     DELIMITER = "\r\n--#{BOUNDRY}\r\n"
     CLOSE_DELIMITER = "\r\n--#{BOUNDRY}--"
@@ -191,17 +140,139 @@ window.Drive =
         DELIMITER
         'Content-Type: application/json\r\n\r\n'
         JSON.stringify
-          title: fileName
+          title: uploadParams.fileName
           mimeType: 'text/plain'
-          description: desc
+          description: uploadParams.desc
+          parents: [{kind: 'drive#fileLink', id: folderId}]
         DELIMITER
         'Content-Type: text/plain\r\n'
         'Content-Transfer-Encoding: 8bit\r\n\r\n'
-        mhtml
+        fileReader.result
         CLOSE_DELIMITER
       ].join('')
 
-    request.execute cb
+    request.execute (resp) ->
+      console.log 'Drive upload response', resp
+      uploadParams.deferred.resolve resp
+
+      # Reset the entire uploadParams
+      uploadParams = null
+
+
+  initialize: () ->
+    apiLoadDeferred = Q.defer()
+    gapi.client.load 'drive', 'v2', () ->
+      apiLoadDeferred.resolve()
+
+    # Return the promise of this procedure:
+    #
+    # Authorize & Load API --> find folder --> optionally create folder
+    #
+    return Q.all([apiLoadDeferred.promise, @authorize()])
+      .then(@findFolder)
+      .then(
+        () -> # Successfully found folder, directly resolve.
+          return Q(folderId)
+        () => # Folder not found, return the createFolder's promise.
+          return @createFolder()
+      ).thenResolve folderId
+
+  #
+  # Returns exposed object interfaces
+  #
+
+  authorize: () ->
+    deferred = Q.defer()
+
+    parseToken = (tabId, info, tab) ->
+      # https://developers.google.com/accounts/docs/OAuth2UserAgent
+      #
+      return unless info.url and info.url.indexOf(REDIRECT_URI) == 0
+      tokenObj = {}
+      queryString = info.url.slice( info.url.indexOf('#')+1 )
+      regex = /([^&=]+)=([^&]*)/g
+
+      while m = regex.exec queryString
+        tokenObj[decodeURIComponent(m[1])] = decodeURIComponent(m[2])
+
+      # Call setToken when tokenObj exists
+      # https://developers.google.com/api-client-library/javascript/reference/referencedocs
+      #
+      gapi.auth.setToken tokenObj
+
+      console.log "Logged in Google Drive", tokenObj
+
+      chrome.tabs.onUpdated.removeListener parseToken
+
+      deferred.resolve()
+
+    chrome.tabs.onUpdated.addListener parseToken
+
+    gapi.auth.authorize
+      client_id: CLIENT_ID
+      scope: SCOPES
+      immediate: false
+      # https://developers.google.com/api-client-library/javascript/start/start-js
+      # Setting redirect-uri means using the server-side flow.
+      # However we use the extension to capture the access token in URL here.
+      #
+      redirect_uri: REDIRECT_URI
+
+    return deferred.promise
+
+  # Get the drive folder named FOLDER_NAME in the user's google drive.
+  findFolder: () ->
+    deferred = Q.defer()
+
+    request = gapi.client.drive.files.list
+      q: "title='#{FOLDER_NAME}' and mimeType = '#{FOLDER_MIME}'"
+      fields: "items/id"
+
+    request.execute (resp) ->
+      console.log 'findFolder resp: ', resp
+      folderId = resp.items?.length && resp.items[0].id
+      if folderId
+        deferred.resolve folderId
+      else
+        deferred.reject 'Not Found'
+
+    return deferred.promise
+
+  createFolder: () ->
+    deferred = Q.defer()
+
+    gapi.client.request {
+      path: '/upload/drive/v2/files'
+      method: 'POST'
+      params:
+        uploadType: 'media'
+      body:
+        title: FOLDER_NAME
+        mimeType: FOLDER_MIME
+    }, (resp) ->
+      console.log 'createFolder resp:', resp
+      folderId = resp.id
+      deferred.resolve folderId
+
+    return deferred.promise
+
+  # Reads mhtml blob and sets the upload parameters
+  upload: (fileName, mhtmlBlob, desc) ->
+    deferred = Q.defer()
+
+    if fileReader.readyState == fileReader.LOADING
+      console.error 'fileReader is busy now.'
+
+    # Setup upload parameters
+    uploadParams =
+      fileName: fileName
+      desc: desc
+      deferred: deferred
+
+    fileReader.readAsText(mhtmlBlob)
+
+    return deferred.promise
+
 
 chrome.browserAction.onClicked.addListener (tab) ->
   status = LiveReloadGlobal.tabStatus(tab.id)
