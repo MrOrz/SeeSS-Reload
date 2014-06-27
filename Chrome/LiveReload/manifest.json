@@ -4,6 +4,7 @@
   "version": "2.0.9",
   "background": {
     "scripts": [
+      "q.js",
       "google-api.js",
       "global.js",
       "global-chrome.js"
