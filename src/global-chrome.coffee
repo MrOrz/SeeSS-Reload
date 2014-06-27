@@ -345,6 +345,29 @@ IntegrityState = do () ->
 
   return self
 
+# Wrapper for Drive.upload that reads information from current IntegrityState
+# and generates an uniformed snapshot filename
+#
+sendSnapshot = () ->
+  deferred = Q.defer()
+
+  # Generate a local time string YYYY-MM-DD HH:mm:SS in local time zone
+  localeTimestamp = Date.now() - (new Date).getTimezoneOffset()*60000
+  dateString = (new Date(localeTimestamp)).toISOString().replace('T',' ').replace(/\.\d{3}Z/, '')
+
+  # Prefix every file with [v] or [x]
+  label = (IntegrityState.get() == IntegrityState.CORRECT_STATE ? 'v' : 'x')
+
+  # Return Drive.upload promise
+  #
+  fileTitle = "[#{label}]#{dateString}|#{IntegrityState.title()}.mht"
+
+  console.log "Uploading to Google Drive: #{fileTitle}, #{IntegrityState.desc()}"
+  Drive.upload(fileTitle, IntegrityState.blob(), IntegrityState.desc()).then (resp)->
+    IntegrityState.cleanup()
+    return resp
+
+
 chrome.browserAction.onClicked.addListener (tab) ->
   status = LiveReloadGlobal.tabStatus(tab.id)
   console.log "Listener Clickd", status
