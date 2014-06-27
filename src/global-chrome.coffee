@@ -19,24 +19,34 @@ ToggleCommand =
     chrome.browserAction.setTitle { tabId, title: status.buttonToolTip }
     chrome.browserAction.setIcon { tabId, path: status.buttonIcon }
 
+    unless status.activated
+      chrome.browserAction.setBadgeText
+        tabId: ToggleCommand.currentTabId
+        text: ''
+
+    else
+
+      # update badge if the status is activated.
+
+      switch IntegrityState.get()
+        when IntegrityState.CORRECT_STATE  then popupText = '✓'; popupColor = '#090'
+        when IntegrityState.EDITING_STATE  then popupText = '…'; popupColor = '#cc0'
+        when IntegrityState.GLITCHED_STATE then popupText = 'x'; popupColor = '#c00'
+
+      chrome.browserAction.setBadgeText
+        tabId: ToggleCommand.currentTabId
+        text: popupText
+
+      chrome.browserAction.setBadgeBackgroundColor
+        tabId: ToggleCommand.currentTabId
+        color: popupColor
+
 Popup =
   set: () ->
     console.log 'Set popup'
     chrome.browserAction.setPopup
       tabId: ToggleCommand.currentTabId
       popup: 'popup.html'
-
-    # chrome.browserAction.setBadgeText
-      # tabId: ToggleCommand.currentTabId
-      # text: 'X'
-      # text: '…'
-      # text: '✓'
-
-    # chrome.browserAction.setBadgeBackgroundColor
-      # tabId: ToggleCommand.currentTabId
-      # color: '#c00'
-      # color: '#cc0'
-      # color: '#090'
 
 
   unset: () ->
@@ -46,9 +56,6 @@ Popup =
       tabId: ToggleCommand.currentTabId
       popup: ''
 
-    chrome.browserAction.setBadgeText
-      tabId: ToggleCommand.currentTabId
-      text: ''
 
 Inspector =
   doStart: () ->
