@@ -385,7 +385,8 @@ chrome.browserAction.onClicked.addListener (tab) ->
 # http://stackoverflow.com/questions/14069948/how-to-stop-chrome-tabs-reload-from-resetting-the-extension-icon
 # Chrome refresh / pushstate resets icon to default. Get it back.
 #
-chrome.tabs.onUpdated.addListener (tabId) ->
+chrome.tabs.onUpdated.addListener (tabId, info, tab) ->
+  return unless info.status == "complete"
   status = LiveReloadGlobal.tabStatus(tabId)
   ToggleCommand.update(tabId) if tabId == ToggleCommand.currentTabId
 
