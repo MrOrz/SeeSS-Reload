@@ -123,14 +123,14 @@ window.Drive = do () ->
   FOLDER_MIME = 'application/vnd.google-apps.folder'
   REDIRECT_URI = 'http://mrorz.github.io/SeeSS-Reload'
 
-  fileReader = new FileReader
-  uploadParams = null
-  folderId = null # ID of the Google drive folder containing SeeSS mht files.
+  _fileReader = new FileReader
+  _uploadParams = null
+  _folderId = null # ID of the Google drive folder containing SeeSS mht files.
 
   # Upload the file into FOLDER_NAME folder
   # https://developers.google.com/drive/v2/reference/files/insert
-  fileReader.onload = () ->
-    return unless uploadParams
+  _fileReader.onload = () ->
+    return unless _uploadParams
 
     BOUNDRY = "---------#{("" + Math.random()).slice(2)}"
     DELIMITER = "\r\n--#{BOUNDRY}\r\n"
@@ -147,23 +147,23 @@ window.Drive = do () ->
         DELIMITER
         'Content-Type: application/json\r\n\r\n'
         JSON.stringify
-          title: uploadParams.fileName
+          title: _uploadParams.fileName
           mimeType: 'text/plain'
-          description: uploadParams.desc
-          parents: [{kind: 'drive#fileLink', id: folderId}]
+          description: _uploadParams.desc
+          parents: [{kind: 'drive#fileLink', id: _folderId}]
         DELIMITER
         'Content-Type: text/plain\r\n'
         'Content-Transfer-Encoding: 8bit\r\n\r\n'
-        fileReader.result
+        _fileReader.result
         CLOSE_DELIMITER
       ].join('')
 
     request.execute (resp) ->
       console.log 'Drive upload response', resp
-      uploadParams.deferred.resolve resp
+      _uploadParams.deferred.resolve resp
 
-      # Reset the entire uploadParams
-      uploadParams = null
+      # Reset the entire _uploadParams
+      _uploadParams = null
 
 
   initialize: () ->
@@ -179,10 +179,10 @@ window.Drive = do () ->
       .then(@findFolder)
       .then(
         () -> # Successfully found folder, directly resolve.
-          return Q(folderId)
+          return Q(_folderId)
         () => # Folder not found, return the createFolder's promise.
           return @createFolder()
-      ).thenResolve folderId
+      ).thenResolve _folderId
 
   #
   # Returns exposed object interfaces
@@ -237,9 +237,9 @@ window.Drive = do () ->
 
     request.execute (resp) ->
       console.log 'findFolder resp: ', resp
-      folderId = resp.items?.length && resp.items[0].id
-      if folderId
-        deferred.resolve folderId
+      _folderId = resp.items?.length && resp.items[0].id
+      if _folderId
+        deferred.resolve _folderId
       else
         deferred.reject 'Not Found'
 
@@ -258,8 +258,8 @@ window.Drive = do () ->
         mimeType: FOLDER_MIME
     }, (resp) ->
       console.log 'createFolder resp:', resp
-      folderId = resp.id
-      deferred.resolve folderId
+      _folderId = resp.id
+      deferred.resolve _folderId
 
     return deferred.promise
 
@@ -267,16 +267,16 @@ window.Drive = do () ->
   upload: (fileName, mhtmlBlob, desc) ->
     deferred = Q.defer()
 
-    if fileReader.readyState == fileReader.LOADING || uploadParams != null
+    if _fileReader.readyState == _fileReader.LOADING || _uploadParams != null
       throw new Error('Upload pending.')
 
     # Setup upload parameters
-    uploadParams =
+    _uploadParams =
       fileName: fileName
       desc: desc
       deferred: deferred
 
-    fileReader.readAsText(mhtmlBlob)
+    _fileReader.readAsText(mhtmlBlob)
 
     return deferred.promise
 
