@@ -281,6 +281,63 @@ window.Drive = do () ->
     return deferred.promise
 
 
+IntegrityState = do () ->
+
+  # Private variables
+  _state = null
+  _storedDesc = null
+  _storedBlob = null
+  _storedTitle = null
+
+  # Change state and update icon
+  _changeState = (newState) ->
+    _state = newState
+    ToggleCommand.update(ToggleCommand.currentTabId)
+
+  # Exposed interface
+  #
+  self =
+    CORRECT_STATE: 0
+    EDITING_STATE: 1
+    GLITCHED_STATE: 2
+
+    # Getters
+    get: () -> _state
+    blob: () -> _storedBlob
+    desc: () -> _storedDesc
+    title: () -> _storedTitle
+
+    readyToUpload: () ->
+      _storedBlob && _storedTitle
+
+    # Store the page blob & page title
+    store: (title, blb) ->
+      console.log "Update stored blob to", title, blb
+      _storedTitle = title
+      _storedBlob = blb
+
+    # The only way to return to CORRECT_STATE
+    cleanup: () ->
+      _storedTitle = title
+      _storedBlob = blb
+      _storedDesc = null
+      _changeState(self.CORRECT_STATE)
+
+    # Set state to any state other than CORRECT
+    # and stores description
+    set: (state, desc) ->
+      switch state
+        when @EDITING_STATE then _changeState(state)
+        when @GLITCHED_STATE
+          _storedDesc = desc
+          _changeState(state)
+        else
+          console.error 'Invalid state transition for IntegrityState'
+
+  _changeState(self.CORRECT_STATE) # Set initial state to correct.
+
+  return self
+
 chrome.browserAction.onClicked.addListener (tab) ->
   status = LiveReloadGlobal.tabStatus(tab.id)
   console.log "Listener Clickd", status
