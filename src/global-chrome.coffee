@@ -425,6 +425,19 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
           sendResponse false
       )
 
+    when 'reportGlitch'
+      chrome.pageCapture.saveAsMHTML {
+        tabId: data.tab.id
+      }, (blob) ->
+        # Put in the required data into the state
+        IntegrityState.store data.tab.title, blob
+        IntegrityState.set IntegrityState.GLITCHED_STATE, "{{#{data.glitch.trim()}}} #{data.desc.trim()}"
+
+        # Send mhtml snapshot
+        sendSnapshot().then (resp) ->
+          sendResponse resp
+
+      return true # Make the extension channel open for sendResponse() calls.
 
     else
       LiveReloadGlobal.received(eventName, data)

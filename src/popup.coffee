@@ -1,4 +1,5 @@
 $glitch = document.getElementById('glitch')
+$desc = document.getElementById('glitch-desc')
 
 getCurrentTab = (cb) ->
   chrome.tabs.query {active: true, currentWindow: true}, (tabs) ->
@@ -11,17 +12,22 @@ document.getElementById('disable').addEventListener 'click', () ->
     window.close()
 
 document.getElementById('save').addEventListener 'click', () ->
-  chrome.tabs.query {active: true, currentWindow: true}, (tabs) ->
-    chrome.pageCapture.saveAsMHTML {
-      tabId: tabs[0].id
-    }, (data) ->
-      console.log data
-      a = document.createElement 'a'
-      a.href = URL.createObjectURL data
-      a.download = "data.mhtml"
-      a.innerText = "Download!"
+  getCurrentTab (tab) ->
+    data =
+      tab: tab
+      glitch: $glitch.value
+      desc: $desc.innerText
 
-      document.querySelector('body').insertBefore a
+    chrome.extension.sendMessage ['reportGlitch', data], (success) ->
+      window.close() if success
+
+      # console.log blob
+      # a = document.createElement 'a'
+      # a.href = URL.createObjectURL blob
+      # a.download = "data.mhtml"
+      # a.innerText = "Download!"
+
+      # document.querySelector('body').insertBefore a
 
 $glitch.addEventListener 'click', () ->
   getCurrentTab (tab) ->
