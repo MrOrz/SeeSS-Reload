@@ -79,12 +79,14 @@ Inspector =
       # chrome.debugger.sendCommand @debuggee, 'DOM.resolveNode', {nodeId: nodeId}, (result) ->
       #   @selectedElem = result[0]
 
-  start: (cb) ->
+  start: () ->
 
     @selectedElem = null
 
     @debuggee =
       tabId: ToggleCommand.currentTabId
+
+    deferred = Q.defer()
 
     chrome.debugger.attach @debuggee, "1.0", () =>
 
@@ -95,10 +97,15 @@ Inspector =
         targets = targets.filter (t) => t.tabId == @debuggee.tabId
 
         if targets.length == 1 and targets[0].attached
+          # debugger launched successfully
           @doStart()
-          cb(true) # debugger launched successfully
+          deferred.resolve()
+
         else
-          cb(false) # DevTools opened, debugger cannot launch
+          # DevTools opened, debugger cannot launch
+          deferred.reject()
+
+    return deferred.promise
 
   stop: () ->
     chrome.debugger.sendCommand @debuggee, 'DOM.setInspectModeEnabled', {enabled: false}, () =>
@@ -324,10 +331,13 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
     # Starts inspection and returns whether starting is successful.
     #
     when 'startInspection'
-      Inspector.start (success)->
-        sendResponse success
+      Inspector.start().then(
+        () ->
+          sendResponse true
+        () ->
+          sendResponse false
+      )
 
-      return true
 
     else
       LiveReloadGlobal.received(eventName, data)
