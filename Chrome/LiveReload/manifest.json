@@ -5,9 +5,9 @@
   "background": {
     "scripts": [
       "q.js",
-      "google-api.js",
       "global.js",
-      "global-chrome.js"
+      "global-chrome.js",
+      "google-api.js"
     ]
   },
   "content_scripts": [

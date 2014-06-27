@@ -1,4 +1,4 @@
-Q.longStackSupport = true
+# Q.longStackSupport = true
 
 TabState::send = (message, data={}) ->
   chrome.tabs.sendMessage @tab, [message, data]
@@ -130,6 +130,7 @@ window.Drive = do () ->
   FOLDER_MIME = 'application/vnd.google-apps.folder'
   REDIRECT_URI = 'http://mrorz.github.io/SeeSS-Reload'
 
+  _initialized = false
   _fileReader = new FileReader
   _uploadParams = null
   _folderId = null # ID of the Google drive folder containing SeeSS mht files.
@@ -167,7 +168,10 @@ window.Drive = do () ->
 
     request.execute (resp) ->
       console.log 'Drive upload response', resp
-      _uploadParams.deferred.resolve resp
+      if resp.error
+        _uploadParams.deferred.reject resp.error
+      else
+        _uploadParams.deferred.resolve resp
 
       # Reset the entire _uploadParams
       _uploadParams = null
@@ -189,6 +193,10 @@ window.Drive = do () ->
           return Q(_folderId)
         () => # Folder not found, return the createFolder's promise.
           return @createFolder()
+      ).then(
+        () ->
+          console.log 'Drive initailized!'
+          _initialized = true
       ).thenResolve _folderId
 
   #
@@ -236,6 +244,7 @@ window.Drive = do () ->
 
   # Get the drive folder named FOLDER_NAME in the user's google drive.
   findFolder: () ->
+    throw new Error('Drive unauthorized yet') unless gapi.auth.getToken()
     deferred = Q.defer()
 
     request = gapi.client.drive.files.list
@@ -253,6 +262,8 @@ window.Drive = do () ->
     return deferred.promise
 
   createFolder: () ->
+    throw new Error('Drive unauthorized yet') unless gapi.auth.getToken()
+
     deferred = Q.defer()
 
     gapi.client.request {
@@ -272,6 +283,8 @@ window.Drive = do () ->
 
   # Reads mhtml blob and sets the upload parameters
   upload: (fileName, mhtmlBlob, desc) ->
+    throw new Error('Drive uninitialized yet') unless _initialized
+
     deferred = Q.defer()
 
     if _fileReader.readyState == _fileReader.LOADING || _uploadParams != null
@@ -362,9 +375,13 @@ sendSnapshot = () ->
   fileTitle = "[#{label}]#{dateString}|#{IntegrityState.title()}.mht"
 
   console.log "Uploading to Google Drive: #{fileTitle}, #{IntegrityState.desc()}"
-  Drive.upload(fileTitle, IntegrityState.blob(), IntegrityState.desc()).then (resp)->
-    IntegrityState.cleanup()
-    return resp
+  Drive.upload(fileTitle, IntegrityState.blob(), IntegrityState.desc()).then(
+    (resp) ->
+      IntegrityState.cleanup()
+      return resp
+    (error) ->
+      Drive.initialize() if error.code == 401
+  )
 
 
 chrome.browserAction.onClicked.addListener (tab) ->
@@ -436,6 +453,16 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
       )
 
       return true # Make the extension channel open for sendResponse() calls.
+
+    when 'debouncedMutation'
+      chrome.pageCapture.saveAsMHTML({
+        tabId: sender.tab.id
+      }, (blob) ->
+        # Put in required data into the state.
+        IntegrityState.store sender.tab.title, blob
+        IntegrityState.set IntegrityState.CORRECT_STATE
+      )
+
     when 'reportGlitch'
       chrome.pageCapture.saveAsMHTML {
         tabId: data.tab.id
@@ -452,3 +479,9 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
 
     else
       LiveReloadGlobal.received(eventName, data)
+
+# Initalize Google drive on startup
+window.gapi_onload = () ->
+  console.log 'GAPI Onload invoked!', gapi.auth, gapi.client
+  setTimeout ()->
+    Drive.initialize()
