@@ -26,9 +26,11 @@ DebouncedMutationObserver = do ->
   MUTATION_DEBOUNCE_INTERVAL = 500
   _mutationDebounce = null
 
-  _observer = new MutationObserver (mutations) ->
+  _mutationCallback = () ->
     clearTimeout _mutationDebounce
     _mutationDebounce = setTimeout (() -> chrome.extension.sendMessage ['debouncedMutation']), MUTATION_DEBOUNCE_INTERVAL
+
+  _observer = new MutationObserver _mutationCallback
 
   # Exposed interfaces
   #
@@ -39,6 +41,9 @@ DebouncedMutationObserver = do ->
     _observer.observe document.body,
       subtree: true
       childList: true
+
+    # Invoke _mutationCallback once when observer is enabled.
+    _mutationCallback()
 
   disable: ->
     _observer.disconnect()
