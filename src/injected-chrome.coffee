@@ -34,7 +34,7 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
       glitches = (results.item(i) for i in [0...results.length])
 
       glitchNames = glitches.map (elem) ->
-        "#{elem.localName}.#{elem.className.split(' ').join('.')}"
+        "#{elem.localName}##{elem.id}.#{elem.className.split(' ').join('.')}"
 
       console.log(glitches, glitchNames)
       sendResponse(glitchNames)
