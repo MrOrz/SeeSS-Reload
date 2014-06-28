@@ -27,8 +27,11 @@ ToggleCommand =
     else
 
       # update badge if the status is activated.
+      # Do not trigger IntegrityState's constructor in ToggleCommand.update()!
+      # Because IntegrityState's constructor invokes ToggleCommand.update() internally.
+      #
 
-      switch IntegrityState.current().get()
+      switch IntegrityState.current(false).get()
         when IntegrityState.CORRECT_STATE  then popupText = '✓'; popupColor = '#090'
         when IntegrityState.EDITING_STATE  then popupText = '…'; popupColor = '#cc0'
         when IntegrityState.GLITCHED_STATE then popupText = 'x'; popupColor = '#c00'
@@ -367,8 +370,8 @@ class IntegrityState
         console.error 'Invalid state transition for IntegrityState'
 
   # Class method that returns the integrity state of the current tab.
-  IntegrityState.current = ->
-    _tabs[ToggleCommand.currentTabId] || new IntegrityState(ToggleCommand.currentTabId)
+  IntegrityState.current = (createNew = true) ->
+    _tabs[ToggleCommand.currentTabId] || (createNew && new IntegrityState(ToggleCommand.currentTabId))
 
   # Transparent state constants from prototype
   IntegrityState.CORRECT_STATE = IntegrityState.prototype.CORRECT_STATE
