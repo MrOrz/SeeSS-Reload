@@ -147,6 +147,20 @@ window.Drive = do () ->
     DELIMITER = "\r\n--#{BOUNDRY}\r\n"
     CLOSE_DELIMITER = "\r\n--#{BOUNDRY}--"
 
+    thumbnailData = null
+
+    if _uploadParams.thumb
+      thumbData = _uploadParams.thumb.slice _uploadParams.thumb.indexOf('base64,')+7
+
+      # thumbnail.image must be "URL-safe Base64 encoded bytes".
+      #
+      # https://developers.google.com/drive/v2/reference/files
+      # http://stackoverflow.com/questions/17377103/google-drive-update-keeps-throwing-an-error-when-i-try-to-save-a-thumbnail
+      #
+      thumbnailData =
+        image: thumbData.replace(/\+/g, '-').replace(/\//g, '_') # Convert base64 to base64url
+        mimeType: _uploadParams.thumb.match(/data:(.+?);/)[1]
+
     request = gapi.client.request
       path: '/upload/drive/v2/files'
       method: 'POST'
@@ -159,11 +173,12 @@ window.Drive = do () ->
         'Content-Type: application/json\r\n\r\n'
         JSON.stringify
           title: _uploadParams.fileName
-          mimeType: 'text/plain'
+          mimeType: 'message/rfc822'
           description: _uploadParams.desc
           parents: [{kind: 'drive#fileLink', id: _folderId}]
+          thumbnail: thumbnailData
         DELIMITER
-        'Content-Type: text/plain\r\n'
+        'Content-Type: message/rfc822\r\n'
         'Content-Transfer-Encoding: 8bit\r\n\r\n'
         _fileReader.result
         CLOSE_DELIMITER
@@ -285,7 +300,7 @@ window.Drive = do () ->
     return deferred.promise
 
   # Reads mhtml blob and sets the upload parameters
-  upload: (fileName, mhtmlBlob, desc) ->
+  upload: (fileName, mhtmlBlob, thumb, desc) ->
     throw new Error('Drive uninitialized yet') unless _initialized
 
     deferred = Q.defer()
@@ -297,6 +312,7 @@ window.Drive = do () ->
     _uploadParams =
       fileName: fileName
       desc: desc
+      thumb: thumb
       deferred: deferred
 
     _fileReader.readAsText(mhtmlBlob)
@@ -319,6 +335,7 @@ class IntegrityState
     @_storedDesc = null
     @_storedBlob = null
     @_storedTitle = null
+    @_storedThumbUrl = null
 
     @_changeState(@CORRECT_STATE)  # Set initial state to correct.
 
@@ -341,21 +358,23 @@ class IntegrityState
   get: () -> @_state
   blob: () -> @_storedBlob
   desc: () -> @_storedDesc
+  thumb: () -> @_storedThumbUrl
   title: () -> @_storedTitle
 
   readyToUpload: () ->
     @_storedBlob && @_storedTitle
 
   # Store the page blob & page title
-  store: (title, blb) ->
-    console.log "Update stored blob to", title, blb
+  store: (title, blb, thumb) ->
+    console.log "Update stored blob to", title, blb, thumb.slice(0, 20)+'...'
     @_storedTitle = title
     @_storedBlob = blb
+    @_storedThumbUrl = thumb
 
   # The only way to return to CORRECT_STATE
   cleanup: () ->
     console.log "Stored blob information cleared for tab #{@tabId}"
-    @_storedTitle = @_storedBlob = @_storedDesc = null
+    @_storedTitle = @_storedBlob = @_storedDesc = @_storedThumbUrl = null
     @_changeState(@CORRECT_STATE)
 
   # Set state to any state other than CORRECT
@@ -399,10 +418,15 @@ sendSnapshot = () ->
 
   # Return Drive.upload promise
   #
-  fileTitle = "[#{label}]#{dateString}|#{IntegrityState.current().title()}.mht"
+  fileTitle = "#{dateString}[#{label}]#{IntegrityState.current().title()}.mht"
 
   console.log "Uploading to Google Drive: #{fileTitle}, #{IntegrityState.current().desc()}"
-  Drive.upload(fileTitle, IntegrityState.current().blob(), IntegrityState.current().desc()).then(
+  Drive.upload(
+    fileTitle,
+    IntegrityState.current().blob(),
+    IntegrityState.current().thumb(),
+    IntegrityState.current().desc()
+  ).then(
     (resp) ->
       IntegrityState.current().cleanup()
       return resp
@@ -453,11 +477,33 @@ chrome.tabs.onSelectionChanged.addListener (tabId, selectInfo) ->
 chrome.tabs.onRemoved.addListener (tabId) ->
   LiveReloadGlobal.killZombieTab tabId
 
+getMHTML = (tabId) ->
+  console.log 'Getting mhtml'
+  deferred = Q.defer()
+  chrome.pageCapture.saveAsMHTML
+    tabId: tabId
+    (blob) ->
+      console.log 'got mhtml'
+      deferred.resolve blob
+
+  return deferred.promise
+
+getThumbnailDataUrl = () ->
+  console.log 'Getting thumbnail'
+  deferred = Q.defer()
+  chrome.tabs.captureVisibleTab (dataUrl) ->
+    console.log 'got thumbnail dataUrl'
+    deferred.resolve dataUrl
+
+  return deferred.promise
 
 chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) ->
   # console.log "#{eventName}(#{JSON.stringify(data)})"
   switch eventName
     when 'status'
+      # Trigger the instantiation of integrity state of current tab
+      IntegrityState.current()
+
       LiveReloadGlobal.updateStatus(sender.tab.id, data)
       ToggleCommand.update(sender.tab.id)
 
@@ -482,20 +528,17 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
       return true # Make the extension channel open for sendResponse() calls.
 
     when 'debouncedMutation'
-      chrome.pageCapture.saveAsMHTML({
-        tabId: sender.tab.id
-      }, (blob) ->
+
+      Q.all([getMHTML(sender.tab.id), getThumbnailDataUrl()]).spread (blob, thumbDataUrl) ->
         # Put in required data into the state.
-        IntegrityState.current().store sender.tab.url, blob
+        IntegrityState.current().store sender.tab.url, blob, thumbDataUrl
         # IntegrityState.current().set IntegrityState.current().CORRECT_STATE
-      )
 
     when 'reportGlitch'
-      chrome.pageCapture.saveAsMHTML {
-        tabId: data.tab.id
-      }, (blob) ->
+
+      Q.all([getMHTML(data.tab.id), getThumbnailDataUrl()]).spread (blob, thumbDataUrl) ->
         # Put in the required data into the state
-        IntegrityState.current().store data.tab.url, blob
+        IntegrityState.current().store data.tab.url, blob, thumbDataUrl
         IntegrityState.current().set IntegrityState.current().GLITCHED_STATE, "{{#{data.glitch.trim()}}} #{data.desc.trim()}"
 
         # Send mhtml snapshot
