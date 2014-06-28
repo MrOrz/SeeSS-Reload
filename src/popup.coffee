@@ -29,13 +29,16 @@ document.getElementById('save').addEventListener 'click', () ->
 
       # document.querySelector('body').insertBefore a
 
-$glitch.addEventListener 'click', () ->
+inspectClickHandler = () ->
   getCurrentTab (tab) ->
     chrome.extension.sendMessage ['startInspection'], (success) ->
       if success
         window.close()
       else
         $glitch.value = "Please close devtools or add attribute '__SEESS_GLITCH__' on your own."
+
+$glitch.addEventListener 'click', inspectClickHandler
+document.getElementById('glitch-button').addEventListener 'click', inspectClickHandler
 
 # Kick start:
 # Read the previously selected glitches from content script
