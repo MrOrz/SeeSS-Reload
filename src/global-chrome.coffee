@@ -60,41 +60,46 @@ Popup =
       popup: ''
 
 
-Inspector =
-  doStart: () ->
-    chrome.debugger.sendCommand @debuggee, 'DOM.setInspectModeEnabled',
+Inspector = do ->
+
+  _debuggee = null
+
+  # Mark the inspected element with empty attribute __SEESS_GLITCH__
+  #
+  # https://github.com/cyrus-and/chrome-remote-interface/blob/master/lib/protocol.json
+  # Much better than Chrome's documentation...
+  #
+  chrome.debugger.onEvent.addListener (src, method, params) =>
+    return unless method == 'DOM.inspectNodeRequested'
+    tabId = src.tabId
+    nodeId = params.nodeId
+    chrome.debugger.sendCommand _debuggee, 'DOM.setAttributeValue', {
+      nodeId: nodeId,
+      name: '__SEESS_GLITCH__',
+      value: '',
+    }, () =>
+      Inspector.stop()
+
+      # Tell the user to click the extension browser action button again
+      chrome.notifications.create 'seess-reload-notification', {
+        iconUrl: 'IconActive@2x.png'
+        type: 'basic'
+        title: 'Glitch Specified'
+        message: 'Please open the popup again to complete the glitch report.'
+      }, () ->
+
+
+  _doStart = () ->
+    chrome.debugger.sendCommand _debuggee, 'DOM.setInspectModeEnabled',
       enabled: true
       highlightConfig:
         showInfo: true
         contentColor: {r: 0, g: 0, b: 255, a:0.5}
         borderColor:  {r: 0, g: 0, b: 255, a:0.8}
 
-
-    # Mark the inspected element with empty attribute __SEESS_GLITCH__
-    #
-    # https://github.com/cyrus-and/chrome-remote-interface/blob/master/lib/protocol.json
-    # Much better than Chrome's documentation...
-    #
-    chrome.debugger.onEvent.addListener (src, method, params) =>
-      return unless method == 'DOM.inspectNodeRequested'
-      tabId = src.tabId
-      nodeId = params.nodeId
-      chrome.debugger.sendCommand @debuggee, 'DOM.setAttributeValue', {
-        nodeId: nodeId,
-        name: '__SEESS_GLITCH__',
-        value: '',
-      }, () =>
-        @stop()
-        chrome.notifications.create 'seess-reload-notification', {
-          iconUrl: 'IconActive@2x.png'
-          type: 'basic'
-          title: 'Glitch Specified'
-          message: 'Please open the popup again to complete the glitch report.'
-          }, () ->
-
-
-      # chrome.debugger.sendCommand @debuggee, 'DOM.resolveNode', {nodeId: nodeId}, (result) ->
-      #   @selectedElem = result[0]
+  #
+  # Exposed interface of Inspector
+  #
 
   start: () ->
     deferred = Q.defer()
@@ -110,20 +115,20 @@ Inspector =
       currentWindow: true
       (tabs) =>
 
-        @debuggee =
+        _debuggee =
           tabId: tabs[0].id
 
-        chrome.debugger.attach @debuggee, "1.0", () =>
+        chrome.debugger.attach _debuggee, "1.0", () =>
 
           # Check if the debugger is successfully attached or not.
           # Only initiate inspector mode on when the debugger is attached.
           #
           chrome.debugger.getTargets (targets) =>
-            targets = targets.filter (t) => t.tabId == @debuggee.tabId
+            targets = targets.filter (t) => t.tabId == _debuggee.tabId
 
             if targets.length == 1 and targets[0].attached
               # debugger launched successfully
-              @doStart()
+              _doStart()
               deferred.resolve()
 
             else
@@ -133,9 +138,9 @@ Inspector =
     return deferred.promise
 
   stop: () ->
-    chrome.debugger.sendCommand @debuggee, 'DOM.setInspectModeEnabled', {enabled: false}, () =>
-      chrome.debugger.detach @debuggee
-      @debuggee = null
+    chrome.debugger.sendCommand _debuggee, 'DOM.setInspectModeEnabled', {enabled: false}, () =>
+      chrome.debugger.detach _debuggee
+      _debuggee = null
 
 
 window.Drive = do () ->

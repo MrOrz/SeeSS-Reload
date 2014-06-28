@@ -66,8 +66,17 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
       glitches = (results.item(i) for i in [0...results.length])
 
       glitchNames = glitches.map (elem) ->
-        "#{elem.localName}##{elem.id}.#{elem.className.split(' ').join('.')}"
+        name = elem.localName
+        name += "##{elem.id}" if elem.id
+        name += ".#{elem.className.split(' ').join('.')}" if elem.className
+
+        return name
 
       console.log(glitches, glitchNames)
       sendResponse(glitchNames)
       return true
+
+    when 'cleanGlitchMarkups'
+      results = document.querySelectorAll('[__SEESS_GLITCH__]')
+      for i in [0...results.length]
+        results.item(i).removeAttribute '__SEESS_GLITCH__'

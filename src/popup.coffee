@@ -40,6 +40,13 @@ inspectClickHandler = () ->
 $glitch.addEventListener 'click', inspectClickHandler
 document.getElementById('glitch-button').addEventListener 'click', inspectClickHandler
 
+
+document.getElementById('clean-element').addEventListener 'click', ->
+  $glitch.value = ''
+  getCurrentTab (tab) ->
+    chrome.tabs.sendMessage tab.id, ['cleanGlitchMarkups']
+
+
 # Kick start:
 # Read the previously selected glitches from content script
 #

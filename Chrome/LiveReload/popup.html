@@ -13,6 +13,20 @@
     #glitch {
       cursor: pointer;
     }
+
+    #clean-element {
+      display: none;
+      position: absolute;
+      right: 0.5em;
+      top: 0.5em;
+      z-index: 2; /* form-control has the z-index of 2 */
+      color: #aaa;
+    }
+
+    .input-group:hover #clean-element{
+      display: block;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -29,6 +43,8 @@
             </button>
           </span>
           <input id="glitch" class="form-control" placeholder="Click to inspect element..." readonly>
+
+          <span id="clean-element" class="glyphicon glyphicon-remove"></span>
         </div>
       </div>
       <div class="form-group">
