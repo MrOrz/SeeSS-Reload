@@ -18,6 +18,31 @@ liveReloadInjected = new LiveReloadInjected(document, window, 'Chrome')
 
 #   stop: () ->
 
+
+# Singleton that observes DOM mutations
+#
+DebouncedMutationObserver = do ->
+
+  MUTATION_DEBOUNCE_INTERVAL = 500
+  _mutationDebounce = null
+
+  _observer = new MutationObserver (mutations) ->
+    clearTimeout _mutationDebounce
+    _mutationDebounce = setTimeout (() -> chrome.extension.sendMessage ['debouncedMutation']), MUTATION_DEBOUNCE_INTERVAL
+
+  # Exposed interfaces
+  #
+  enable: ->
+
+    # Observe the DOM structure change only.
+    #
+    _observer.observe document.body,
+      subtree: true
+      childList: true
+
+  disable: ->
+    _observer.disconnect()
+
 chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) ->
   # console.log "#{eventName}(#{JSON.stringify(data)})"
   switch eventName
@@ -25,8 +50,10 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
       alert data
     when 'enable'
       liveReloadInjected.enable(data)
+      DebouncedMutationObserver.enable()
     when 'disable'
       liveReloadInjected.disable()
+      DebouncedMutationObserver.disable()
 
     when 'getGlitches'
       results = document.querySelectorAll('[__SEESS_GLITCH__]')
