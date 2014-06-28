@@ -291,7 +291,7 @@ window.Drive = do () ->
 
     request.execute (resp) ->
       console.log 'findFolder resp: ', resp
-      _folderId = resp.items?.length && resp.items[0].id
+      _folderId = resp?.items?.length && resp.items[0].id
       if _folderId
         deferred.resolve _folderId
       else
@@ -304,15 +304,15 @@ window.Drive = do () ->
 
     deferred = Q.defer()
 
-    gapi.client.request {
-      path: '/upload/drive/v2/files'
+    request = gapi.client.request
+      path: '/drive/v2/files'
       method: 'POST'
-      params:
-        uploadType: 'media'
       body:
         title: FOLDER_NAME
         mimeType: FOLDER_MIME
-    }, (resp) ->
+
+
+    request.execute (resp) ->
       console.log 'createFolder resp:', resp
       _folderId = resp.id
       deferred.resolve _folderId
