@@ -97,30 +97,38 @@ Inspector =
       #   @selectedElem = result[0]
 
   start: () ->
+    deferred = Q.defer()
 
     @selectedElem = null
 
-    @debuggee =
-      tabId: ToggleCommand.currentTabId
+    # Get the current tab,
+    # since ToggleCommand.currentTabId is not always correct in
+    # this scenario.
+    #
+    chrome.tabs.query
+      active: true,
+      currentWindow: true
+      (tabs) =>
 
-    deferred = Q.defer()
+        @debuggee =
+          tabId: tabs[0].id
 
-    chrome.debugger.attach @debuggee, "1.0", () =>
+        chrome.debugger.attach @debuggee, "1.0", () =>
 
-      # Check if the debugger is successfully attached or not.
-      # Only initiate inspector mode on when the debugger is attached.
-      #
-      chrome.debugger.getTargets (targets) =>
-        targets = targets.filter (t) => t.tabId == @debuggee.tabId
+          # Check if the debugger is successfully attached or not.
+          # Only initiate inspector mode on when the debugger is attached.
+          #
+          chrome.debugger.getTargets (targets) =>
+            targets = targets.filter (t) => t.tabId == @debuggee.tabId
 
-        if targets.length == 1 and targets[0].attached
-          # debugger launched successfully
-          @doStart()
-          deferred.resolve()
+            if targets.length == 1 and targets[0].attached
+              # debugger launched successfully
+              @doStart()
+              deferred.resolve()
 
-        else
-          # DevTools opened, debugger cannot launch
-          deferred.reject()
+            else
+              # DevTools opened, debugger cannot launch
+              deferred.reject()
 
     return deferred.promise
 
