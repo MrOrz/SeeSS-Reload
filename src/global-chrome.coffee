@@ -571,14 +571,14 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
 
       Q.all([getMHTML(sender.tab.id), getThumbnailDataUrl()]).spread (blob, thumbDataUrl) ->
         # Put in required data into the state.
-        IntegrityState.current().store sender.tab.url, blob, thumbDataUrl
+        IntegrityState.current().store "<#{sender.tab.width}x#{sender.tab.height}>#{sender.tab.url}", blob, thumbDataUrl
         # IntegrityState.current().set IntegrityState.current().CORRECT_STATE
 
     when 'reportGlitch'
 
       Q.all([getMHTML(data.tab.id), getThumbnailDataUrl()]).spread (blob, thumbDataUrl) ->
         # Put in the required data into the state
-        IntegrityState.current().store data.tab.url, blob, thumbDataUrl
+        IntegrityState.current().store "<#{data.tab.width}x#{data.tab.height}>#{data.tab.url}", blob, thumbDataUrl
         IntegrityState.current().set IntegrityState.current().GLITCHED_STATE, "{{#{data.glitch.trim()}}} #{data.desc.trim()}"
 
         # Send mhtml snapshot
