@@ -85,6 +85,13 @@ Inspector =
         value: '',
       }, () =>
         @stop()
+        chrome.notifications.create 'seess-reload-notification', {
+          iconUrl: 'IconActive@2x.png'
+          type: 'basic'
+          title: 'Glitch Specified'
+          message: 'Please open the popup again to complete the glitch report.'
+          }, () ->
+
 
       # chrome.debugger.sendCommand @debuggee, 'DOM.resolveNode', {nodeId: nodeId}, (result) ->
       #   @selectedElem = result[0]

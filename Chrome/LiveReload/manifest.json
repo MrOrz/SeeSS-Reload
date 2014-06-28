@@ -23,7 +23,8 @@
     "tabs",
     "pageCapture",
     "debugger",
-    "<all_urls>"
+    "<all_urls>",
+    "notifications"
   ],
   "icons": { "48": "icon48.png",
             "128": "icon128.png" },
