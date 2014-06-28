@@ -28,7 +28,7 @@ ToggleCommand =
 
       # update badge if the status is activated.
 
-      switch IntegrityState.get()
+      switch IntegrityState.current().get()
         when IntegrityState.CORRECT_STATE  then popupText = '✓'; popupColor = '#090'
         when IntegrityState.EDITING_STATE  then popupText = '…'; popupColor = '#cc0'
         when IntegrityState.GLITCHED_STATE then popupText = 'x'; popupColor = '#c00'
@@ -301,61 +301,85 @@ window.Drive = do () ->
     return deferred.promise
 
 
-IntegrityState = do () ->
+# Integrity state for each tasbs
+class IntegrityState
 
-  # Private variables
-  _state = null
-  _storedDesc = null
-  _storedBlob = null
-  _storedTitle = null
+  # tab --> state instance
+  _tabs = {}
+
+
+  # Prototype methods
+
+  constructor: (@tabId) ->
+    # Pseudo-private variables
+    @_state = null
+    @_storedDesc = null
+    @_storedBlob = null
+    @_storedTitle = null
+
+    @_changeState(@CORRECT_STATE)  # Set initial state to correct.
+
+    # Register the current integrity state instance into the _tabs hash.
+    _tabs[@tabId] = @
+
+  CORRECT_STATE: 0
+  EDITING_STATE: 1
+  GLITCHED_STATE: 2
 
   # Change state and update icon
-  _changeState = (newState) ->
-    _state = newState
+  _changeState: (newState) ->
+    @_state = newState
     ToggleCommand.update(ToggleCommand.currentTabId)
 
   # Exposed interface
   #
-  self =
-    CORRECT_STATE: 0
-    EDITING_STATE: 1
-    GLITCHED_STATE: 2
 
-    # Getters
-    get: () -> _state
-    blob: () -> _storedBlob
-    desc: () -> _storedDesc
-    title: () -> _storedTitle
+  # Getters
+  get: () -> @_state
+  blob: () -> @_storedBlob
+  desc: () -> @_storedDesc
+  title: () -> @_storedTitle
 
-    readyToUpload: () ->
-      _storedBlob && _storedTitle
+  readyToUpload: () ->
+    @_storedBlob && @_storedTitle
 
-    # Store the page blob & page title
-    store: (title, blb) ->
-      console.log "Update stored blob to", title, blb
-      _storedTitle = title
-      _storedBlob = blb
+  # Store the page blob & page title
+  store: (title, blb) ->
+    console.log "Update stored blob to", title, blb
+    @_storedTitle = title
+    @_storedBlob = blb
 
-    # The only way to return to CORRECT_STATE
-    cleanup: () ->
-      console.log "Stored blob information cleared"
-      _storedTitle = _storedBlob = _storedDesc = null
-      _changeState(self.CORRECT_STATE)
+  # The only way to return to CORRECT_STATE
+  cleanup: () ->
+    console.log "Stored blob information cleared for tab #{@tabId}"
+    @_storedTitle = @_storedBlob = @_storedDesc = null
+    @_changeState(@CORRECT_STATE)
 
-    # Set state to any state other than CORRECT
-    # and stores description
-    set: (state, desc) ->
-      switch state
-        when @EDITING_STATE then _changeState(state)
-        when @GLITCHED_STATE
-          _storedDesc = desc
-          _changeState(state)
-        else
-          console.error 'Invalid state transition for IntegrityState'
+  # Set state to any state other than CORRECT
+  # and stores description
+  set: (state, desc) ->
+    switch state
+      when @EDITING_STATE then @_changeState(state)
+      when @GLITCHED_STATE
+        @_storedDesc = desc
+        @_changeState state
+      else
+        console.error 'Invalid state transition for IntegrityState'
 
-  _changeState(self.CORRECT_STATE) # Set initial state to correct.
+  # Class method that returns the integrity state of the current tab.
+  IntegrityState.current = ->
+    _tabs[ToggleCommand.currentTabId] || new IntegrityState(ToggleCommand.currentTabId)
 
-  return self
+  # Transparent state constants from prototype
+  IntegrityState.CORRECT_STATE = IntegrityState.prototype.CORRECT_STATE
+  IntegrityState.EDITING_STATE = IntegrityState.prototype.EDITING_STATE
+  IntegrityState.GLITCHED_STATE = IntegrityState.prototype.GLITCHED_STATE
+
+  # Cleanup _tabs when tab closed
+  chrome.tabs.onRemoved.addListener (tabId) ->
+    delete _tabs[tabId]
+    return
+
 
 # Wrapper for Drive.upload that reads information from current IntegrityState
 # and generates an uniformed snapshot filename
@@ -368,19 +392,19 @@ sendSnapshot = () ->
   dateString = (new Date(localeTimestamp)).toISOString().replace('T',' ').replace(/\.\d{3}Z/, '')
 
   # Prefix every file with [v] or [x]
-  label = if IntegrityState.get() == IntegrityState.CORRECT_STATE then 'v' else 'x'
+  label = if IntegrityState.current().get() == IntegrityState.CORRECT_STATE then 'v' else 'x'
 
   # Return Drive.upload promise
   #
-  fileTitle = "[#{label}]#{dateString}|#{IntegrityState.title()}.mht"
+  fileTitle = "[#{label}]#{dateString}|#{IntegrityState.current().title()}.mht"
 
-  console.log "Uploading to Google Drive: #{fileTitle}, #{IntegrityState.desc()}"
-  Drive.upload(fileTitle, IntegrityState.blob(), IntegrityState.desc()).then(
+  console.log "Uploading to Google Drive: #{fileTitle}, #{IntegrityState.current().desc()}"
+  Drive.upload(fileTitle, IntegrityState.current().blob(), IntegrityState.current().desc()).then(
     (resp) ->
-      IntegrityState.cleanup()
+      IntegrityState.current().cleanup()
       return resp
     (error) ->
-      Drive.initialize() if error.code == 401
+      Drive.authorize() if error.code == 401
   )
 
 
@@ -418,7 +442,7 @@ chrome.tabs.onUpdated.addListener (tabId, info, tab) ->
   return unless tabId == ToggleCommand.currentTabId
 
   # Send the stored blob file now.
-  sendSnapshot() if IntegrityState.readyToUpload()
+  sendSnapshot() if IntegrityState.current().readyToUpload()
 
 chrome.tabs.onSelectionChanged.addListener (tabId, selectInfo) ->
   ToggleCommand.update(tabId)
@@ -459,8 +483,8 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
         tabId: sender.tab.id
       }, (blob) ->
         # Put in required data into the state.
-        IntegrityState.store sender.tab.title, blob
-        IntegrityState.set IntegrityState.CORRECT_STATE
+        IntegrityState.current().store sender.tab.url, blob
+        # IntegrityState.current().set IntegrityState.current().CORRECT_STATE
       )
 
     when 'reportGlitch'
@@ -468,8 +492,8 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
         tabId: data.tab.id
       }, (blob) ->
         # Put in the required data into the state
-        IntegrityState.store data.tab.title, blob
-        IntegrityState.set IntegrityState.GLITCHED_STATE, "{{#{data.glitch.trim()}}} #{data.desc.trim()}"
+        IntegrityState.current().store data.tab.url, blob
+        IntegrityState.current().set IntegrityState.current().GLITCHED_STATE, "{{#{data.glitch.trim()}}} #{data.desc.trim()}"
 
         # Send mhtml snapshot
         sendSnapshot().then (resp) ->
