@@ -402,6 +402,42 @@ class IntegrityState
     delete _tabs[tabId]
     return
 
+# Given a data-url of a image,
+# Shrink the image into 0.3 * width and 0.3* height and output new data-url
+#
+ImageDataUrlResizer = do () ->
+
+  SCALE = 0.3
+
+  _imageElem = new Image
+  _imageElem.onload = () ->
+
+    # Resizing
+    width = _canvasElem.width = _imageElem.width * SCALE
+    height = _canvasElem.height = _imageElem.height * SCALE
+
+    _ctx.drawImage _imageElem, 0, 0, width, height
+    _deferred.resolve _canvasElem.toDataURL('image/jpeg', 0.5)
+
+  _canvasElem = document.createElement('canvas')
+  _ctx = _canvasElem.getContext('2d')
+
+  _deferred = null
+
+  return (dataUrl) ->
+    # Cancel previous resize request.
+    if _deferred && _deferred.promise.isPending()
+      _deferred.reject 'Canceled by next image'
+
+    # Create new deferred object
+    _deferred = Q.defer()
+
+    # Kick-start the _imageElem.onload
+    _imageElem.src = dataUrl
+
+    return _deferred.promise
+
+
 
 # Wrapper for Drive.upload that reads information from current IntegrityState
 # and generates an uniformed snapshot filename
@@ -420,19 +456,22 @@ sendSnapshot = () ->
   #
   fileTitle = "#{dateString}[#{label}]#{IntegrityState.current().title()}.mht"
 
-  console.log "Uploading to Google Drive: #{fileTitle}, #{IntegrityState.current().desc()}"
-  Drive.upload(
-    fileTitle,
-    IntegrityState.current().blob(),
-    IntegrityState.current().thumb(),
-    IntegrityState.current().desc()
-  ).then(
-    (resp) ->
-      IntegrityState.current().cleanup()
-      return resp
-    (error) ->
-      Drive.authorize() if error.code == 401
-  )
+  # Resize thumbnail before actual upload
+  #
+  ImageDataUrlResizer(IntegrityState.current().thumb()).then (smallThumb) ->
+    console.log "Uploading to Google Drive: #{fileTitle}, #{IntegrityState.current().desc()}"
+    Drive.upload(
+      fileTitle,
+      IntegrityState.current().blob(),
+      smallThumb,
+      IntegrityState.current().desc()
+    ).then(
+      (resp) ->
+        IntegrityState.current().cleanup()
+        return resp
+      (error) ->
+        Drive.authorize() if error.code == 401
+    )
 
 
 chrome.browserAction.onClicked.addListener (tab) ->
@@ -476,6 +515,7 @@ chrome.tabs.onSelectionChanged.addListener (tabId, selectInfo) ->
 
 chrome.tabs.onRemoved.addListener (tabId) ->
   LiveReloadGlobal.killZombieTab tabId
+
 
 getMHTML = (tabId) ->
   console.log 'Getting mhtml'
