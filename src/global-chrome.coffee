@@ -616,7 +616,17 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
 
         # Send mhtml snapshot
         sendSnapshot().then (resp) ->
+
+          chrome.notifications.create 'seess-reload-notification', {
+            iconUrl: resp.thumbnailLink
+            type: 'basic'
+            title: 'Glitch Uploaded'
+            message: resp.description
+          }, () ->
+
           sendResponse resp
+
+          return
 
       return true # Make the extension channel open for sendResponse() calls.
 
