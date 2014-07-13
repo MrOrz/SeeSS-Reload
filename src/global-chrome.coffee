@@ -16,13 +16,20 @@ ToggleCommand =
     @currentTabId = tabId
     console.log 'Update to tab id: ', tabId
     status = LiveReloadGlobal.tabStatus(tabId)
-    chrome.browserAction.setTitle { tabId, title: status.buttonToolTip }
-    chrome.browserAction.setIcon { tabId, path: status.buttonIcon }
+    try
+      chrome.browserAction.setTitle { tabId, title: status.buttonToolTip }
+      chrome.browserAction.setIcon { tabId, path: status.buttonIcon }
+    catch e
+      console.error e
 
     unless status.activated
-      chrome.browserAction.setBadgeText
-        tabId: ToggleCommand.currentTabId
-        text: ''
+      try
+        chrome.browserAction.setBadgeText
+          tabId: ToggleCommand.currentTabId
+          text: ''
+      catch e
+        console.error e
+
 
     else
 
