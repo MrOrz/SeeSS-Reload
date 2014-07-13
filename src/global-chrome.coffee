@@ -436,18 +436,16 @@ ImageDataUrlResizer = do () ->
 
   SCALE = 0.3
 
-  _imageElem = new Image
-  _imageElem.onload = () ->
-
-    # Resizing
-    width = _canvasElem.width = _imageElem.width * SCALE
-    height = _canvasElem.height = _imageElem.height * SCALE
-
-    _ctx.drawImage _imageElem, 0, 0, width, height
-    _deferred.resolve _canvasElem.toDataURL('image/jpeg', 0.5)
-
   _canvasElem = document.createElement('canvas')
   _ctx = _canvasElem.getContext('2d')
+  _onload = ->
+
+    # Resizing
+    width = _canvasElem.width = this.width * SCALE
+    height = _canvasElem.height = this.height * SCALE
+
+    _ctx.drawImage this, 0, 0, width, height
+    _deferred.resolve _canvasElem.toDataURL('image/jpeg', 0.5)
 
   _deferred = null
 
@@ -458,6 +456,10 @@ ImageDataUrlResizer = do () ->
 
     # Create new deferred object
     _deferred = Q.defer()
+
+    # Create the image element
+    _imageElem = new Image
+    _imageElem.onload = _onload.bind(_imageElem)
 
     # Kick-start the _imageElem.onload
     _imageElem.src = dataUrl
