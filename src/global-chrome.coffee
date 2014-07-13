@@ -472,7 +472,6 @@ ImageDataUrlResizer = do () ->
 # and generates an uniformed snapshot filename
 #
 sendSnapshot = () ->
-  deferred = Q.defer()
 
   # Generate a local time string YYYY-MM-DD HH:mm:SS in local time zone
   localeTimestamp = Date.now() - (new Date).getTimezoneOffset()*60000
@@ -485,23 +484,28 @@ sendSnapshot = () ->
   #
   fileTitle = "#{dateString}[#{label}]#{IntegrityState.current().title()}.mht"
 
-  # Resize thumbnail before actual upload
+  # Resize thumbnail before actual upload. Return the chained promise
   #
-  ImageDataUrlResizer(IntegrityState.current().thumb()).then (smallThumb) ->
+  return ImageDataUrlResizer(IntegrityState.current().thumb()).then (smallThumb) ->
     console.log "Uploading to Google Drive: #{fileTitle}, #{IntegrityState.current().desc()}"
-    Drive.upload(
+    return Drive.upload(
       fileTitle,
       IntegrityState.current().blob(),
       smallThumb,
       IntegrityState.current().desc()
-    ).then(
-      (resp) ->
-        IntegrityState.current().cleanup()
-        return resp
-      (error) ->
-        Drive.authorize() if error.code == 401
     )
+  .then(
+    (resp) ->
+      IntegrityState.current().cleanup()
+      return resp
+    (error) ->
+      if error.code == 401
+        Drive.authorize()
+      else
+        console.error error
 
+      return error
+  )
 
 chrome.browserAction.onClicked.addListener (tab) ->
   status = LiveReloadGlobal.tabStatus(tab.id)
