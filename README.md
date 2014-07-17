@@ -34,11 +34,7 @@ chrome://extensions/
 
 4. 點選「載入未封裝功能」點遠 **SeeSS-Reload/Chrome/LiveReload** 資料夾
 
-5. 或是直接下載 crx 封裝檔
-~~~
-https://github.com/MrOrz/SeeSS-Reload/raw/master/dist/LiveReload.crx
-~~~
-並**從資料夾**拖曳進視窗即可安裝。
+5. 或是直接[下載 crx 封裝檔](https://github.com/MrOrz/SeeSS-Reload/raw/master/dist/LiveReload-with-SeeSS-logger.crx)，並**從資料夾**拖曳進視窗即可安裝。
 
 6. 初次安裝會要求 google drive 權限。
 
