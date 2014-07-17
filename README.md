@@ -60,11 +60,11 @@ chrome://extensions/
 
 	![](https://dl.dropboxusercontent.com/u/50022655/fig4.png)
 
-5. 左上角會出現已經上傳的小跳窗(沒有跳出來請將 extension 關掉 **已啟用** 再重新打開。)
+5. 右上角會出現已經上傳的小跳窗(沒有跳出來請將 extension 關掉 **已啟用** 再重新打開。)
 
 	![](https://dl.dropboxusercontent.com/u/50022655/fig4.5.png)
 
-6. 開發一段時間之後可到 Google Drive 的「SeeSS Collected Data」查看已上傳網頁。MHT 檔下載後，可以用 Google Chrome 打開。
+6. 開發一段時間之後可到 Google Drive 的「SeeSS Collected Data」查看已上傳網頁。若想要查看個別 MHT 檔，請下載檔案後用 Google Chrome 打開。
 
 	![](https://dl.dropboxusercontent.com/u/50022655/fig5.png)
 
