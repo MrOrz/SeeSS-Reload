@@ -3,6 +3,5 @@ LiveReload.safariextension/*.js
 Chrome/LiveReload/*.js
 Firefox/content/*.js
 interim/*.js
-/dist
 /update/McCoy
 /Chrome/*.pem
