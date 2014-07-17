@@ -4,7 +4,7 @@
 
 此研究的目的是觀測和分析網頁開發者在開發網頁時，遇到未預期的 CSS 問題 (glitch) 的狀況。
 
-此 Chrome extension 會抓取開發者遇到的問題並回報，回報的圖和文字會上傳到開發者自己的 Google drive；使用者可以選擇刪掉敏感資訊，再分享給研究者。
+此 Google Chrome extension 會抓取開發者遇到的問題並回報，回報的圖和文字會上傳到開發者自己的 Google drive；使用者可以選擇刪掉敏感資訊，再分享給研究者。
 
 我們會紀錄的資訊僅限有開啟 LiveReload extension 的分頁內容、螢幕大小與使用者標記，用 MHTML 方式直接存到開發者 Google Drive 上的特定資料夾。除此資料之外，沒有多收取任何資訊。
 
@@ -64,7 +64,7 @@ chrome://extensions/
 
 	![](https://dl.dropboxusercontent.com/u/50022655/fig4.5.png)
 
-6. 開發一段時間之後可到 Google Drive 查看已上傳圖片
+6. 開發一段時間之後可到 Google Drive 的「SeeSS Collected Data」查看已上傳網頁。MHT 檔下載後，可以用 Google Chrome 打開。
 
 	![](https://dl.dropboxusercontent.com/u/50022655/fig5.png)
 
