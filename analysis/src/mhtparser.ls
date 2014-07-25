@@ -38,6 +38,8 @@ class MHTParser
       # Skip all chrome-extension assets
       continue if part.header[\content-location].0.match /^chrome-extension/
 
+      # Skip all Javascript files
+      continue if part.header[\content-type].0 is 'application/javascript'
 
       part.content = switch part.header[\content-transfer-encoding].0
       | 'quoted-printable' => mimelib.decodeQuotedPrintable part.raw-content
