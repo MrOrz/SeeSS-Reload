@@ -1,0 +1,18 @@
+{
+  "name": "SeeSS-Reload-Analysis",
+  "version": "0.0.0",
+  "description": "Scripts analyzing MHT files stored by SeeSS-Reload",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "mimelib": "~0.2.16",
+    "LiveScript": "~1.2.0",
+    "gulp-livescript": "~1.0.3",
+    "gulp": "~3.8.6",
+    "multipart-parser": "0.0.2"
+  }
+}
