@@ -213,6 +213,10 @@ window.Drive = do () ->
 
     request.execute (resp) ->
       console.log 'Drive upload response', resp
+
+      # Don't execute callbacks if the upload is aborted
+      return unless _uploadParams
+
       if resp.error
         _uploadParams.deferred.reject resp.error
       else
@@ -221,6 +225,15 @@ window.Drive = do () ->
       # Reset the entire _uploadParams
       _uploadParams = null
 
+  # Abort upload and resets _uploadParams
+  abort: () ->
+    return unless _uploadParams
+
+    if _fileReader.readyState == _fileReader.LOADING
+      _fileReader.abort()
+
+    _uploadParams.deferred.reject 'aborted'
+    _uploadParams = null
 
   initialize: () ->
     apiLoadDeferred = Q.defer()
@@ -327,12 +340,19 @@ window.Drive = do () ->
     return deferred.promise
 
   # Reads mhtml blob and sets the upload parameters
-  upload: (fileName, mhtmlBlob, thumb, desc) ->
+  upload: (fileName, mhtmlBlob, thumb, desc, force = false) ->
     throw new Error('Drive uninitialized yet') unless _initialized
 
     deferred = Q.defer()
 
-    if _fileReader.readyState == _fileReader.LOADING || _uploadParams != null
+    # If force uploading, abort previous uplaod
+    #
+    if force
+      @abort()
+
+    # Abort when not force-uploading and the previous upload is not fulfilled
+    #
+    else if _fileReader.readyState == _fileReader.LOADING || _uploadParams != null
       throw new Error('Upload pending.')
 
     # Setup upload parameters
@@ -492,7 +512,8 @@ sendSnapshot = () ->
       fileTitle,
       IntegrityState.current().blob(),
       smallThumb,
-      IntegrityState.current().desc()
+      IntegrityState.current().desc(),
+      IntegrityState.current().get() == IntegrityState.GLITCHED_STATE # If glitched, force upload
     )
   .then(
     (resp) ->
@@ -617,7 +638,12 @@ chrome.runtime.onMessage.addListener ([eventName, data], sender, sendResponse) -
         # Send mhtml snapshot
         sendSnapshot().then (resp) ->
 
-          chrome.notifications.create 'seess-reload-notification', {
+          # The notification may not appear for the same notification ID
+          # after any unsuccessful chrome.notifications.create() calls.
+          # In order to make sure the notification will come out every time,
+          # we add Math.random to the notification ID.
+          #
+          chrome.notifications.create "seess-reload-notification-#{Math.random()}", {
             iconUrl: resp.thumbnailLink
             type: 'basic'
             title: 'Glitch Uploaded'
