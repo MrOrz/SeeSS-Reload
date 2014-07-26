@@ -17,7 +17,7 @@ class MHTProcessor
   (@input-file) ->
 
   process: ->
-    data <- fs.read-file-async @input-file, encoding: \utf8 .then _
+    data <~ fs.read-file-async @input-file, encoding: \utf8 .then _
 
     parser = new MHTParser(data)
     parts = parser.parse!
@@ -75,13 +75,14 @@ class MHTProcessor
     return @files
 
   output: (output-dir) ->
+
     for file in @files
       # Outputting file
       opt =
         encoding: if file.encoding is 'base64' then 'base64' else null
 
       console.log \Saving, file.location, \as, file.name
-      fs.writeFile "#{output-dir}/#{file.name}", content, opt, ->
+      fs.write-file "#{output-dir}/#{file.name}", file.content, opt, ->
         console.error it if it
 
 exports <<< {MHTProcessor}
