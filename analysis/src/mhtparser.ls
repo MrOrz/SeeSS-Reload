@@ -26,7 +26,10 @@ class MHTParser
     # Fetch boundary from the header of MHT file.
     {header: mht-header, raw-content: mht-raw-content} = @_split @input-string
 
-    boundary = "--#{mht-header['content-type'].0.match(/boundary="(.+)"/).1}\r\n"
+    boundary-token = mht-header['content-type'].0.match(/boundary="(.+)"/).1
+    boundary = "--#{boundary-token}\r\n"
+    ending-boundary = "--#{boundary-token}--\r\n"
+    mht-raw-content = mht-raw-content.slice 0, mht-raw-content.last-index-of(ending-boundary)
 
     # Ignore the first part. It's the header of the entire MHT file.
     parts = mht-raw-content.split boundary .slice 1
@@ -47,7 +50,7 @@ class MHTParser
       | 'base64' => part.raw-content # Just leave it to output.
 
       # Return part for this iteration
-      parsed-parts ++= part
+      parsed-parts ++= new MHTPart(part.header, part.content)
 
     return parsed-parts
 
