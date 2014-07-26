@@ -13,6 +13,7 @@
     "LiveScript": "~1.2.0",
     "gulp-livescript": "~1.0.3",
     "gulp": "~3.8.6",
-    "multipart-parser": "0.0.2"
+    "multipart-parser": "0.0.2",
+    "htmlencode": "0.0.4"
   }
 }
