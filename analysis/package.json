@@ -16,6 +16,7 @@
     "multipart-parser": "0.0.2",
     "htmlencode": "0.0.4",
     "mocha": "~1.21.0",
-    "expect.js": "~0.3.1"
+    "expect.js": "~0.3.1",
+    "bluebird": "~2.2.2"
   }
 }
