@@ -1,0 +1,14 @@
+[
+  {
+    "content": "<!DOCTYPE html><html></html>\r\n",
+    "type": "text/html",
+    "location": "http://google.com",
+    "encoding": "quoted-printable"
+  },
+  {
+    "content": "iVBORw0KGgoAAAANSUhEUgAAAA4AAAAXCAYAAAA7kX6CAAAAIGNIUk0AAHomAACAhAAA+gAAAIDo\r\nAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAEZ0FNQQAAsY58+1GTAAAAAXNSR0IArs4c6QAAAAZiS0dE\r\nAP8A/wD/oL2nkwAAAAlwSFlzAAAOxAAADsQBlSsOGwAAAk5JREFUeNqNlM1r02Acx5Mnb2te+qag\r\nczJE5/4FPUzZQAZzKIIeRNSjoMgctLX0xYOHtrTsJngQZOBh4M2Dpx3EgwdBUPQwEJHOF0SKbdI0\r\ntmuTJX4j23i6NXQ/SEi+Tz75/Z7fy8Mw+7BmsznRarVu0Ro3DKrVaoclUXzK8/ztTCbzt1gsvh0K\r\n6roelQRhRVHVGQHmed7ZbDb7uVAorLFBULVaHYnHYstaOHyBZVllW99ot02GkIskCIxHo08AzdIQ\r\nPDIuWDyu84Mg0zAKiqbNAIrT+kanYxFCLodCoW97QEPXl2RVvYYPRvsghMgSMg/ojf/eBzZ1/UFI\r\nli9xHNcHdWGbnreobkF9YKPRuD4iy/OCKJ6goV6v527a9pKqacu0/h806vUrgG6KoniKXrRt279W\r\nAOV3b4lHrabh5Z4kSVP0guM4vrfnqqreGJRAHvVYxIZP06Kf9m6nU1XD4atB5SKO6961LGuVFlEG\r\nRpSkcej3g0CuUqmYiUTiPdwcR8gndxY4zm+O6XQ6XS+VSu/2gP4N8J9UKrWGEI+iJScpmIN2Bs39\r\nCc39ZeB0lMvl3/D8A2FOYhLGd5LA8xISNQv4I+CvA8cK8PdkMokGIWNwdmRbRxQK4LlcLvca8K+B\r\nYwX4A+AIPI3iB4coWAZ8Lp/Pv8BYNQPHymg0HqMcc/B8jC5Tp91eR0hTgWMVicUWrFbrleu6P+ky\r\n8YIw5iFsduh5o+vPtEjkPKADDlqwZ9uPFEVZIMPArm3fwUG1ip7tAXrpQ8x+zTTNgzjpHtLaP5mh\r\n9NJPgpvCAAAAAElFTkSuQmCC\r\n", "type": "",
+    "location": "http://google.com/test.png",
+    "encoding": "base64",
+    "type": "image/png"
+  }
+]

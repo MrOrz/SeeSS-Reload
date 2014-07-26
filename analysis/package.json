@@ -4,7 +4,7 @@
   "description": "Scripts analyzing MHT files stored by SeeSS-Reload",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node_modules/mocha/bin/mocha --compilers ls:LiveScript test/*.ls"
   },
   "author": "",
   "license": "MIT",
@@ -14,6 +14,8 @@
     "gulp-livescript": "~1.0.3",
     "gulp": "~3.8.6",
     "multipart-parser": "0.0.2",
-    "htmlencode": "0.0.4"
+    "htmlencode": "0.0.4",
+    "mocha": "~1.21.0",
+    "expect.js": "~0.3.1"
   }
 }
