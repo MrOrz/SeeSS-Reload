@@ -10,10 +10,7 @@ require! '../src/mhtparser'.MHTParser
 !function expect-from-file (name)
   expected = require "./fixtures/#{name}.json"
 
-  (err, data) <-! fs.read-file "test/fixtures/#{name}.mhtml", encoding: \utf8, _
-
-  console.error err if err
-  # console.log data
+  data = fs.read-file-sync "test/fixtures/#{name}.mhtml", encoding: \utf8
 
   parser = new MHTParser(data)
 
