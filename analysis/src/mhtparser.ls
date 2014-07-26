@@ -5,9 +5,10 @@ require! {
 
 class MHTPart
   (@header, @content) ->
-
-  decode-content: ->
-
+    # Add type and location
+    @type = @header['content-type'].0
+    @location = @header['content-location'].0
+    @encoding = @header['content-transfer-encoding'].0
 
 class MHTParser
   (@input-string) ->

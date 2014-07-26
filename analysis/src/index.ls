@@ -21,7 +21,7 @@ parts = parser.parse!
 # {matcher: /kerker.jpg/gm, name: '0.jpg'} means all links to 'kerker.jpg' should become '0.jpg'
 #
 name-matchers = for part, idx in parts
-  filename = part.header['content-location'].0
+  filename = part.location
   pathname = url.parse(filename).pathname
   ext = path.extname pathname
 
@@ -54,9 +54,9 @@ for part, idx in parts
 
   # Outputting file
   opt =
-    encoding: if part.header['content-transfer-encoding'].0 is 'base64' then 'base64' else null
+    encoding: if part.encoding is 'base64' then 'base64' else null
 
-  console.log \Saving, part.header['content-location'].0, \as, new-name
+  console.log \Saving, part.location, \as, new-name
   fs.writeFile "output/#{new-name}", content, opt, ->
     console.error it if it
 
