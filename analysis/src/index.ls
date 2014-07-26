@@ -6,7 +6,7 @@ require! {
 }
 require! './mhtparser'.MHTParser
 
-err, data <- fs.readFile 'data/Macs.mhtml', encoding: \utf8 , _
+err, data <- fs.readFile 'data/vuse.mhtml', encoding: \utf8 , _
 
 if err
   console.error err
