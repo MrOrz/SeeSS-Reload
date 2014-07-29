@@ -76,13 +76,15 @@ class MHTProcessor
 
   output: (output-dir) ->
 
-    for file in @files
+    write-file-promises = for file in @files
       # Outputting file
       opt =
         encoding: if file.encoding is 'base64' then 'base64' else null
 
       console.log \Saving, file.location, \as, file.name
-      fs.write-file "#{output-dir}/#{file.name}", file.content, opt, ->
+      fs.write-file-async "#{output-dir}/#{file.name}", file.content, opt .then ->
         console.error it if it
+
+    return Promise.all write-file-promises
 
 exports <<< {MHTProcessor}
