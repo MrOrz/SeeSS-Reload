@@ -5,7 +5,7 @@ require!{
 }
 
 require! '../src/mhtprocessor'.MHTProcessor
-const TEST_DIR = 'test/tmp'
+const TEST_DIR = 'test/mht-tmp'
 
 (...) <- describe \MHTProcessor _
 
