@@ -8,6 +8,7 @@ require! {
   path
   htmlencode.htmlEncode
   Promise: bluebird
+  crypto
 }
 require! './mhtparser'.MHTParser
 
@@ -33,7 +34,9 @@ class MHTProcessor
       old-name = part.location
       pathname = url.parse(old-name).pathname
       ext = path.extname pathname
-      new-name = "#{idx}#{ext}"
+      hash = crypto.create-hash 'sha1' .update pathname
+      hash .= digest \hex
+      new-name = "#{hash.slice 0, 6}#{ext}"
 
       name-map[old-name] = new-name
 

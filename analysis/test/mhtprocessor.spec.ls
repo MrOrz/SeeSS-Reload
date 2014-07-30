@@ -37,8 +37,8 @@ describe '#output', (...) ->
     return processor.process!then -> processor.output TEST_DIR
       .then !->
         # file "0" and "1.png" should exist.
-        expect sh.run("ls #{TEST_DIR}/0") .to.be 0
-        expect sh.run("ls #{TEST_DIR}/1.png") .to.be 0
+        expect sh.run("ls #{TEST_DIR}/42099b") .to.be 0
+        expect sh.run("ls #{TEST_DIR}/5563dd.png") .to.be 0
 
         # Cleanup
         sh.run "rm -rf #{TEST_DIR}"
