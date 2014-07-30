@@ -1,6 +1,4 @@
-require! './mhtprocessor'.MHTProcessor
+require! './directoryprocessor'.DirectoryProcessor
 
-processor = new MHTProcessor 'data/vuse.mhtml'
-
-processor.process!then ->
-  processor.output 'output'
+processor = new DirectoryProcessor 'data/mrorz/fepz'
+processor.output 'output/mrorz/fepz'
