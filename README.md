@@ -6,7 +6,7 @@
 
 此 Google Chrome extension 會抓取開發者遇到的問題並回報，回報的圖和文字會上傳到開發者自己的 Google drive；使用者可以選擇刪掉敏感資訊，再分享給研究者。
 
-我們會紀錄的資訊僅限有開啟 LiveReload extension 的分頁內容、螢幕大小與使用者標記，用 MHTML 方式直接存到開發者 Google Drive 上的特定資料夾。除此資料之外，沒有多收取任何資訊。
+我們會紀錄的資訊僅限有開啟 LiveReload extension 的分頁內容、螢幕大小與使用者標記，用 MHTML 方式直接存到您自己的 Google Drive。除此資料之外，不會多收取任何資訊。您可以[選擇您要傳送給研究者哪些資料](#%E5%B0%87-glitch-%E5%82%B3%E7%B5%A6%E7%A0%94%E7%A9%B6%E8%80%85-mrorz)。研究者 @MrOrz 不會將您傳送給研究者的網頁資料傳送給研究專案之外的任何其他第三者，也不會將您傳送給研究者的資料以任何形式散佈。
 
 
 ## 安裝步驟
@@ -33,11 +33,9 @@
 	$ rake build
 	~~~ 
 
-3. 打開 Chrome 瀏覽器，瀏覽到 `chrome://extensions/`
+3. 在 [chrome://extensions/](chrome://extensions/) 載入未封裝功能，點選 **SeeSS-Reload/Chrome/LiveReload** 資料夾
 
-4. 點選「載入未封裝功能」、點選 **SeeSS-Reload/Chrome/LiveReload** 資料夾
-
-5. 初次安裝會要求 google drive 權限。
+4. 初次安裝會要求 google drive 權限。
 
 ## 使用方式
 
@@ -70,7 +68,9 @@
 
 回報的網頁會被存在您自己的 Google Drive 裡頭，這個 Chrome Extension 並_不會_將您開發的網頁傳送到您的 Google Drive 之外的其他地方。那麼，收集到的 glitch 又要如何傳給研究者（@MrOrz）呢？
 
-## 將 Glitch 傳給研究者 @MrOrz
+## 將收到的 Glitch 資訊傳給研究者 @MrOrz
+
+在您選擇將資料傳給研究者（@MrOrz）之前，研究者無從得知您收集了多少資訊、以及收集了什麼資訊。所有 SeeSS-Reload 蒐集的資訊，都放在您自己的 Google Drive 中；請使用 Google Drive 的分享功能，將收到的資料分享給研究者 @MrOrz (johnsonliang7[小老鼠]gmail.com)：
 
 1. 開發一段時間之後可到 Google Drive 的「SeeSS Collected Data」查看已上傳網頁。若想要查看個別 MHT 檔，請下載檔案後用 Google Chrome 打開。
 
@@ -81,10 +81,13 @@
 	![](https://dl.dropboxusercontent.com/u/50022655/fig6.png)
 
 
-研究者 @MrOrz 不會將您傳送給研究者的網頁資料傳送給研究專案之外的任何其他第三者。目前 SeeSS 專案只有 @MrOrz 以及指導教授 @profmike ，研究計畫的成員若有更動，會更新於此 README。
+我們很重視您給我們的寶貴開發資料，也理解您的資料可能含有您不願公開的資訊，例如說新版公司網站的外觀。
+
+研究者 @MrOrz 不會將您傳送給研究者的網頁資料傳送給研究專案之外的任何其他第三者，也不會將您傳送給研究者的資料以任何形式散佈。目前 SeeSS 專案只有 @MrOrz 以及指導教授 @profmike ，研究計畫的成員若有更動，會更新於此 README。
 
 
-## 特殊狀況說明
+## 特殊狀況 Gotcha
+
 1. 每隔一個小時會跳出跳窗更新 Google Drive 的 Access Token，無需理會。
 	
 	![ ](https://dl.dropboxusercontent.com/u/50022655/fig-window.png) 
