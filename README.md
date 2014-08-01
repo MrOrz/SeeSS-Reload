@@ -12,31 +12,32 @@
 ## 安裝步驟
 
 此程式是以 Chrome extension 取代 livereload extension，所以在開發時不需再開啟 livereload ，直接載入此程式即可。
-載入方式如下：
+安裝方式如下，請擇一：
 
-1. 在 console 輸入 
-~~~
-git clone git@github.com:MrOrz/SeeSS-Reload.git
-~~~
+### 方法一、使用封裝的 Chrome Extension（較容易）
 
-2. cd 進資料夾，compile 封裝檔
-~~~
-cd SeeSS-Reload
-npm install -g coffee
-npm install
-rake build
-~~~ 
+請[下載 crx 封裝檔 :inbox_tray:](https://github.com/MrOrz/SeeSS-Reload/raw/master/dist/LiveReload-with-SeeSS-logger.crx) ，並**從資料夾**拖曳進 Google Chrome 視窗，即可安裝。
 
-3. 打開 Chrome 瀏覽器，網址列輸入
-~~~
-chrome://extensions/
-~~~
+初次安裝會要求 google drive 權限。
 
-4. 點選「載入未封裝功能」點遠 **SeeSS-Reload/Chrome/LiveReload** 資料夾
 
-5. 或是直接[下載 crx 封裝檔](https://github.com/MrOrz/SeeSS-Reload/raw/master/dist/LiveReload-with-SeeSS-logger.crx)，並**從資料夾**拖曳進視窗即可安裝。
+### 方法二、Build from source
 
-6. 初次安裝會要求 google drive 權限。
+1. `git clone git@github.com:MrOrz/SeeSS-Reload.git`
+
+2. Build Chrome Extension
+	~~~
+	$ cd SeeSS-Reload
+	$ npm install -g coffee
+	$ npm install
+	$ rake build
+	~~~ 
+
+3. 打開 Chrome 瀏覽器，瀏覽到 `chrome://extensions/`
+
+4. 點選「載入未封裝功能」、點選 **SeeSS-Reload/Chrome/LiveReload** 資料夾
+
+5. 初次安裝會要求 google drive 權限。
 
 ## 使用方式
 
@@ -64,13 +65,23 @@ chrome://extensions/
 
 	![](https://dl.dropboxusercontent.com/u/50022655/fig4.5.png)
 
-6. 開發一段時間之後可到 Google Drive 的「SeeSS Collected Data」查看已上傳網頁。若想要查看個別 MHT 檔，請下載檔案後用 Google Chrome 打開。
+
+這樣回報 glitch 就完成囉！
+
+回報的網頁會被存在您自己的 Google Drive 裡頭，這個 Chrome Extension 並_不會_將您開發的網頁傳送到您的 Google Drive 之外的其他地方。那麼，收集到的 glitch 又要如何傳給研究者（@MrOrz）呢？
+
+## 將 Glitch 傳給研究者 @MrOrz
+
+1. 開發一段時間之後可到 Google Drive 的「SeeSS Collected Data」查看已上傳網頁。若想要查看個別 MHT 檔，請下載檔案後用 Google Chrome 打開。
 
 	![](https://dl.dropboxusercontent.com/u/50022655/fig5.png)
 
-7. 點選 share 到開發者信箱: **johnsonliang7@gmail.com** 
+2. 點選 share 到開發者信箱: **johnsonliang7@gmail.com** 
 
 	![](https://dl.dropboxusercontent.com/u/50022655/fig6.png)
+
+
+研究者 @MrOrz 不會將您傳送給研究者的網頁資料傳送給研究專案之外的任何其他第三者。目前 SeeSS 專案只有 @MrOrz 以及指導教授 @profmike ，研究計畫的成員若有更動，會更新於此 README。
 
 
 ## 特殊狀況說明
