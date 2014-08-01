@@ -76,7 +76,7 @@
 
 	![](https://dl.dropboxusercontent.com/u/50022655/fig5.png)
 
-2. 點選 share 到開發者信箱: **johnsonliang7@gmail.com** 
+2. 點選 share 到開發者信箱: **johnsonliang7[小老鼠]gmail.com** 
 
 	![](https://dl.dropboxusercontent.com/u/50022655/fig6.png)
 
